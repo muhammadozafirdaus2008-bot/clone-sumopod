@@ -4,10 +4,9 @@ import {
   Box, MessageSquare, Bot, Cloud, Wallet,
   Monitor, Database, Globe, Mail,
   Receipt, Users, Settings, HelpCircle,
-  GraduationCap, Users2, ChevronDown
+  GraduationCap, Users2
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useState } from "react";
+import ScrollIndicator from "@/components/ui/ScrollIndicator";
 
 interface NavItem {
   label: string;
@@ -65,12 +64,10 @@ const sections: NavSection[] = [
 const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const [showMore, setShowMore] = useState(false);
-
-  const visibleSections = showMore ? sections : sections.slice(0, 4);
 
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-border bg-card">
+      
       {/* Logo */}
       <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -80,15 +77,17 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
-        {visibleSections.map((section) => (
+      <nav className="flex-1 overflow-y-auto sidebar-scroll px-3 py-4 space-y-5">
+        {sections.map((section) => (
           <div key={section.title}>
             <p className="mb-1.5 px-2 text-[11px] font-semibold tracking-wider text-muted-foreground">
               {section.title}
             </p>
+
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 const active = location.pathname === item.path;
+
                 return (
                   <Link
                     key={item.path}
@@ -107,17 +106,13 @@ const Sidebar = () => {
             </div>
           </div>
         ))}
-
-        {!showMore && (
-          <button
-            onClick={() => setShowMore(true)}
-            className="flex w-full items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-          >
-            <ChevronDown className="h-4 w-4" />
-            Scroll for More
-          </button>
-        )}
       </nav>
+
+      {/* Scroll Indicator */}
+      <div className="border-t border-border">
+        <ScrollIndicator />
+      </div>
+
     </aside>
   );
 };
