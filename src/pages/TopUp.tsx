@@ -13,22 +13,44 @@ const packages = [
 ];
 
 const TopUp = () => {
-  const { credits, addCredits } = useAuth();
+  const { user, credits, addCredits } = useAuth();
   const { toast } = useToast();
   const [processing, setProcessing] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
 
   const handleTopUp = async (amount: number, idx: number) => {
-    setProcessing(idx);
-    // Simulate payment gateway delay
-    await new Promise((r) => setTimeout(r, 1500));
-    addCredits(amount);
-    setProcessing(null);
-    toast({
-      title: "Payment successful!",
-      description: `${amount} credits have been added to your account.`,
+  setProcessing(idx);
+
+  try {
+    const res = await fetch("https://your-n8n-webhook-url", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount,
+        userId: user?.id, // penting!
+        paymentMethod: "QRIS",
+      }),
     });
-  };
+
+    const data = await res.json();
+
+    toast({
+      title: "Payment created!",
+      description: "Please complete your payment.",
+    });
+
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: "Error",
+      description: "Failed to create payment",
+    });
+  }
+
+  setProcessing(null);
+};
 
   return (
     <div className="max-w-2xl mx-auto">
