@@ -18,17 +18,20 @@ const DashboardLayout = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-   <div className="h-full flex flex-col">
-  <Sidebar />
-  <div className="flex flex-1 flex-col overflow-hidden">
-    <TopBar />
+    <div className="flex h-screen">
+      {/* Sidebar kiri */}
+      <Sidebar />
 
-    <main className="flex-1 overflow-y-auto p-6 relative">
-  <Outlet />
+      {/* Content kanan */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <TopBar />
 
-    </main>
-  </div>
-</div>
+        <main className="flex-1 overflow-y-auto p-6 relative">
+          <Outlet />
+          <ScrollIndicator />
+        </main>
+      </div>
+    </div>
   );
 };
 
