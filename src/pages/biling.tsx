@@ -7,6 +7,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, QrCode, Receipt, CreditCard, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription, // ⬅️ INI KURANG
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Transaction {
   id: string;
@@ -20,7 +31,7 @@ const Billing = () => {
   const { credits, } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
-
+ const { toast } = useToast();
   
 
 
@@ -48,58 +59,57 @@ const Billing = () => {
   </DialogTrigger>
 
   <DialogContent className="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle>Top Up Balance</DialogTitle>
-      <DialogDescription>
-        Add credits to your account
-      </DialogDescription>
-    </DialogHeader>
+  <DialogHeader>
+    <DialogTitle>Top Up Balance</DialogTitle>
+    <DialogDescription>
+      Add credits to your account
+    </DialogDescription>
+  </DialogHeader>
 
-    {/* INPUT */}
-    <div className="space-y-4">
-      <div>
-        <Label>Amount Sumopod Credit</Label>
-        <Input type="number" placeholder="0" />
-      </div>
-
-      {/* QUICK BUTTON */}
-      <div className="flex gap-2">
-        {[50000, 100000, 200000].map((amt) => (
-          <Button key={amt} variant="outline">
-            {amt.toLocaleString("id-ID")}
-          </Button>
-        ))}
-      </div>
-
-      {/* CURRENCY */}
-      <div>
-        <Label>Currency</Label>
-        <Input value="IDR - Indonesian Rupiah" disabled />
-      </div>
-
-      {/* PAYMENT */}
-      <div>
-        <Label>Payment Method</Label>
-        <Input value="QRIS" disabled />
-      </div>
-
-      {/* WARNING */}
-      <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-3">
-        Sumopod Credit is not real money and cannot be refunded or withdrawn.
-      </div>
+  {/* INPUT */}
+  <div className="space-y-4">
+    <div>
+      <Label>Amount Sumopod Credit</Label>
+      <Input type="number" placeholder="0" />
     </div>
 
-    <DialogFooter>
-      <Button className="w-full">
-        Top Up
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+    {/* QUICK BUTTON */}
+    <div className="flex gap-2">
+      {[50000, 100000, 200000].map((amt) => (
+        <Button key={amt} variant="outline">
+          {amt.toLocaleString("id-ID")}
+        </Button>
+      ))}
+    </div>
+
+    {/* CURRENCY */}
+    <div>
+      <Label>Currency</Label>
+      <Input value="IDR - Indonesian Rupiah" disabled />
+    </div>
+
+    {/* PAYMENT */}
+    <div>
+      <Label>Payment Method</Label>
+      <Input value="QRIS" disabled />
+    </div>
+
+    {/* WARNING */}
+    <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-3">
+      Sumopod Credit is not real money and cannot be refunded or withdrawn.
+    </div>
+  </div> {/* ⬅️ INI YANG SERING KELUPA */}
+
+  <DialogFooter>
+    <Button className="w-full">Top Up</Button>
+  </DialogFooter>
+</DialogContent>
+   </Dialog>
+   </div>
 </div>
         
         
-      </div>
+      
 
       {/* Current Credits */}
       <Card className="mb-6">
@@ -115,7 +125,7 @@ const Billing = () => {
       </Card>
 
       {/* Warning */}
-      <div className="mb-6 flex items-center justify-between">
+     
   
   {/* KIRI */}
   <div>
@@ -133,12 +143,12 @@ const Billing = () => {
     </Button>
 
     <Button size="sm" onClick={() => navigate("/topup")}>
-      <Plus className="mr-1.5 h-4 w-4" />
-      Topup
-    </Button>
+  <Plus className="mr-1.5 h-4 w-4" />
+  Topup
+</Button>
   </div>
 
-</div>
+
 
       {/* Tabs */}
       <Tabs defaultValue="transactions">
