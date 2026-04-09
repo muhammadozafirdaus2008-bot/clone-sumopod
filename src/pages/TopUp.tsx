@@ -18,7 +18,9 @@ const TopUp = () => {
   const [processing, setProcessing] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
 
-  const handleTopUp = async (amount: number, idx: number) => {
+
+
+   const handleTopUp = async (amount: number, idx: number) => {
   setProcessing(idx);
 
   try {
@@ -29,28 +31,38 @@ const TopUp = () => {
       },
       body: JSON.stringify({
         amount,
-        userId: user?.id, // penting!
+        userId: user?.id,
         paymentMethod: "QRIS",
       }),
     });
 
     const data = await res.json();
 
-    toast({
-      title: "Payment created!",
-      description: "Please complete your payment.",
-    });
+    // 👇 TAMBAH DI SINI
+    const paymentUrl = data?.payment_url;
+
+    if (paymentUrl) {
+      window.location.href = paymentUrl; // redirect ke QRIS
+    } else {
+      throw new Error("No payment URL");
+    }
 
   } catch (err) {
     console.error(err);
+
+    // 👇 FALLBACK (buat testing)
+    addCredits(amount);
+
     toast({
-      title: "Error",
-      description: "Failed to create payment",
+      title: "Fallback mode",
+      description: `${amount} credits added (payment bypassed)`,
     });
   }
 
   setProcessing(null);
 };
+
+
 
   return (
     <div className="max-w-2xl mx-auto">

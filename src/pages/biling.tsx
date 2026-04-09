@@ -6,11 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, QrCode, Receipt, CreditCard, AlertTriangle } from "lucide-react";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 
 interface Transaction {
   id: string;
@@ -21,77 +17,35 @@ interface Transaction {
 }
 
 const Billing = () => {
-  const { credits, addCredits } = useAuth();
-  const { toast } = useToast();
+  const { credits, } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [topupAmount, setTopupAmount] = useState("");
-  const [processing, setProcessing] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const handleTopup = async () => {
-    const amount = parseInt(topupAmount);
-    if (!amount || amount <= 0) {
-      toast({ title: "Invalid amount", variant: "destructive" });
-      return;
-    }
-    setProcessing(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    addCredits(amount);
-    setTransactions((prev) => [
-      { id: crypto.randomUUID(), type: "topup", amount, description: `Top up ${amount} credits`, date: new Date().toLocaleString() },
-      ...prev,
-    ]);
-    setProcessing(false);
-    setDialogOpen(false);
-    setTopupAmount("");
-    toast({ title: "Top up successful!", description: `${amount} credits added to your account.` });
-  };
+  
 
+
+
+ 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Billing</h1>
           <p className="text-sm text-muted-foreground">Manage your balance and view transaction history</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <QrCode className="mr-1.5 h-4 w-4" />
-            Redeem
-          </Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-1.5 h-4 w-4" />
-                Topup
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Top Up Credits</DialogTitle>
-                <DialogDescription>Add credits to your SumoPod account.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (credits)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    min="1"
-                    placeholder="Enter amount"
-                    value={topupAmount}
-                    onChange={(e) => setTopupAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleTopup} disabled={processing}>
-                  {processing ? "Processing..." : "Confirm Top Up"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+    </div>
+          <div className="flex items-center gap-2">
+  <Button variant="outline" size="sm">
+    <QrCode className="mr-1.5 h-4 w-4" />
+    Redeem
+  </Button>
+
+  <Button size="sm" onClick={() => navigate("/topup")}>
+    <Plus className="mr-1.5 h-4 w-4" />
+    Topup
+  </Button>
+</div>
+        
+        
       </div>
 
       {/* Current Credits */}
@@ -108,12 +62,30 @@ const Billing = () => {
       </Card>
 
       {/* Warning */}
-      <div className="mb-6 flex items-center gap-3 rounded-lg border border-warning-border bg-warning-bg px-4 py-3">
-        <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
-        <p className="text-sm text-warning-foreground">
-          Sumopod Credit is <strong>not real money</strong> and <strong>cannot be refunded or withdrawn</strong> once added to your account.
-        </p>
-      </div>
+      <div className="mb-6 flex items-center justify-between">
+  
+  {/* KIRI */}
+  <div>
+    <h1 className="text-2xl font-bold text-foreground">Billing</h1>
+    <p className="text-sm text-muted-foreground">
+      Manage your balance and view transaction history
+    </p>
+  </div>
+
+  {/* KANAN */}
+  <div className="flex items-center gap-2">
+    <Button variant="outline" size="sm">
+      <QrCode className="mr-1.5 h-4 w-4" />
+      Redeem
+    </Button>
+
+    <Button size="sm" onClick={() => navigate("/topup")}>
+      <Plus className="mr-1.5 h-4 w-4" />
+      Topup
+    </Button>
+  </div>
+
+</div>
 
       {/* Tabs */}
       <Tabs defaultValue="transactions">
