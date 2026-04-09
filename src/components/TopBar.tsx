@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Settings, LogOut } from "lucide-react";
 
 const TopBar = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ const TopBar = () => {
 
   const handleLogout = async () => {
     setIsOpen(false);
-    await signOut();
+    logout();
     navigate("/login");
   };
 
