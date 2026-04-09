@@ -18,6 +18,7 @@ export default function TopUpModal({ isOpen, onClose, session }) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { addCredits } = useAuth();
+  TopUpModal({ isOpen, onClose, session })
 
   const handleSetAmount = (value: number) => {
     setAmount(String(value));

@@ -9,7 +9,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Services from "@/pages/Services";
 import AddService from "@/pages/AddService";
-import Billing from "@/pages/biling";
+import Billing from "./pages/billing";
 import NotFound from "@/pages/NotFound";
 import PlaceholderPage from "@/components/PlaceholderPage";
 import {
