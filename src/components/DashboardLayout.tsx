@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "@/components/context/AuthContext";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -7,6 +7,7 @@ import ScrollIndicator from "@/components/ui/ScrollIndicator";
 const DashboardLayout = () => {
   const { user, loading } = useAuth();
 
+  // loading screen
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -15,14 +16,15 @@ const DashboardLayout = () => {
     );
   }
 
+  // redirect kalau belum login
   if (!user) return <Navigate to="/login" replace />;
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar kiri */}
+      {/* Sidebar */}
       <Sidebar />
 
-      {/* Content kanan */}
+      {/* Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar />
 

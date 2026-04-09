@@ -39,10 +39,63 @@ const Billing = () => {
     Redeem
   </Button>
 
-  <Button size="sm" onClick={() => navigate("/topup")}>
-    <Plus className="mr-1.5 h-4 w-4" />
-    Topup
-  </Button>
+ <Dialog>
+  <DialogTrigger asChild>
+    <Button size="sm">
+      <Plus className="mr-1.5 h-4 w-4" />
+      Topup
+    </Button>
+  </DialogTrigger>
+
+  <DialogContent className="sm:max-w-md">
+    <DialogHeader>
+      <DialogTitle>Top Up Balance</DialogTitle>
+      <DialogDescription>
+        Add credits to your account
+      </DialogDescription>
+    </DialogHeader>
+
+    {/* INPUT */}
+    <div className="space-y-4">
+      <div>
+        <Label>Amount Sumopod Credit</Label>
+        <Input type="number" placeholder="0" />
+      </div>
+
+      {/* QUICK BUTTON */}
+      <div className="flex gap-2">
+        {[50000, 100000, 200000].map((amt) => (
+          <Button key={amt} variant="outline">
+            {amt.toLocaleString("id-ID")}
+          </Button>
+        ))}
+      </div>
+
+      {/* CURRENCY */}
+      <div>
+        <Label>Currency</Label>
+        <Input value="IDR - Indonesian Rupiah" disabled />
+      </div>
+
+      {/* PAYMENT */}
+      <div>
+        <Label>Payment Method</Label>
+        <Input value="QRIS" disabled />
+      </div>
+
+      {/* WARNING */}
+      <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-3">
+        Sumopod Credit is not real money and cannot be refunded or withdrawn.
+      </div>
+    </div>
+
+    <DialogFooter>
+      <Button className="w-full">
+        Top Up
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 </div>
         
         
