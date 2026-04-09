@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Box, Mail } from "lucide-react";
 
 const Register = () => {
-  const { user, loading, register } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,11 +21,16 @@ const Register = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const result = await register(email, password);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin + "/services" },
+    });
     setSubmitting(false);
-
-    if (!result.success) {
-      toast({ title: "Registration failed", description: result.message ?? "Please try again.", variant: "destructive" });
+    if (error) {
+      toast({ title: "Registration failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Check your email", description: "We sent you a confirmation link." });
     }
   };
 
@@ -56,7 +62,8 @@ const Register = () => {
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account? <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link>
+            Already have an account?{" "}
+            <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link>
           </p>
         </CardContent>
       </Card>

@@ -3,11 +3,12 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/components/context/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAuth, AuthProvider } from "@/components/context/AuthContext";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Services from "@/pages/Services";
+import AddService from "@/pages/AddService";
 import Billing from "@/pages/biling";
 import NotFound from "@/pages/NotFound";
 import PlaceholderPage from "@/components/PlaceholderPage";
@@ -15,7 +16,6 @@ import {
   GraduationCap, Users2, MessageSquare, Bot, Wallet,
   Monitor, Database, Globe, Mail, Users, Settings, HelpCircle,
 } from "lucide-react";
-import TopUp from "@/pages/TopUp";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,7 @@ const App = () => (
               <Route path="/chat" element={<PlaceholderPage title="Chat" subtitle="Messaging services" icon={<MessageSquare className="h-8 w-8 text-accent-foreground" />} />} />
               <Route path="/ai" element={<PlaceholderPage title="AI" subtitle="AI-powered tools" icon={<Bot className="h-8 w-8 text-accent-foreground" />} />} />
               <Route path="/services" element={<Services />} />
-              <Route path="/topup" element={<TopUp />} />
+              <Route path="/services/add" element={<AddService />} />
               <Route path="/wallet" element={<PlaceholderPage title="Wallet" subtitle="Manage your wallet" icon={<Wallet className="h-8 w-8 text-accent-foreground" />} />} />
               {/* INFRASTRUCTURE */}
               <Route path="/vps" element={<PlaceholderPage title="VPS" subtitle="Virtual private servers" icon={<Monitor className="h-8 w-8 text-accent-foreground" />} />} />
