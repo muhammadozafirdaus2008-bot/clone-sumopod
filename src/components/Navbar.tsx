@@ -1,24 +1,43 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/context/AuthContext";
-import { Coins, User, Box } from "lucide-react";
-import { useState } from "react";
+import { Coins, User, Box, Settings, LogOut } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 const Navbar = () => {
   const { user, credits, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    setOpen(false);
+    await signOut();
+    navigate("/login");
+  };
+
+  const handleSettings = () => {
+    setOpen(false);
+    navigate("/settings");
+  };
 
   const navItems = [
     { label: "Services", path: "/services", icon: Box },
     { label: "Top Up", path: "/topup", icon: Coins },
     { label: "Profile", path: "/profile", icon: User },
   ];
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/login");
-  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card">
@@ -64,37 +83,44 @@ const Navbar = () => {
 
           {/* Profile */}
           {user && (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               
               {/* Trigger */}
-              <div
+              <button
                 onClick={() => setOpen(!open)}
-                className="cursor-pointer flex items-center gap-2"
+                className="cursor-pointer flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                <div className="h-8 w-8 flex items-center justify-center rounded-full bg-red-500 text-white font-bold">
+                <div className="h-8 w-8 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold text-sm">
                   {user.email?.[0].toUpperCase()}
                 </div>
                 <div className="hidden md:block text-sm">
-                  <p className="font-medium">{user.email}</p>
+                  <p className="font-medium text-foreground">{user.email}</p>
                 </div>
-              </div>
+              </button>
 
-              {/* Dropdown */}
+              {/* Dropdown Menu */}
               {open && (
-                <div className="absolute right-0 mt-2 w-40 rounded-lg border bg-white shadow-lg z-50">
+                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   
+                  {/* Settings Option */}
                   <button
-                    onClick={() => navigate("/settings")}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={handleSettings}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t-lg"
                   >
-                    ⚙️ Settings
+                    <Settings className="h-4 w-4 text-gray-500" />
+                    <span>Settings</span>
                   </button>
 
+                  {/* Divider */}
+                  <div className="border-t border-gray-100" />
+
+                  {/* Logout Option */}
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 transition-colors last:rounded-b-lg"
                   >
-                    🚪 Logout
+                    <LogOut className="h-4 w-4 text-red-500" />
+                    <span>Logout</span>
                   </button>
 
                 </div>
