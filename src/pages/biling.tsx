@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,10 +14,20 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription, // ⬅️ INI KURANG
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import TopUpModal from "../components/TopUpModal";
+import { supabase } from "../lib/supabase"; // sesuaikan path kamu
+
+
 
 interface Transaction {
   id: string;
@@ -31,7 +41,20 @@ const Billing = () => {
   const { credits, } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
- const { toast } = useToast();
+  const { toast } = useToast();
+  const [session, setSession] = useState(null);
+  const [topupAmount, setTopupAmount] = useState<string>("");
+  const [isLoadingTopup, setIsLoadingTopup] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+    };
+
+    getSession();
+  }, []);
   
 
 
@@ -50,7 +73,7 @@ const Billing = () => {
     Redeem
   </Button>
 
- <Dialog>
+ <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
   <DialogTrigger asChild>
     <Button size="sm">
       <Plus className="mr-1.5 h-4 w-4" />
@@ -59,52 +82,159 @@ const Billing = () => {
   </DialogTrigger>
 
   <DialogContent className="sm:max-w-md">
-  <DialogHeader>
-    <DialogTitle>Top Up Balance</DialogTitle>
-    <DialogDescription>
-      Add credits to your account
-    </DialogDescription>
-  </DialogHeader>
+    <DialogHeader>
+      <DialogTitle>Top Up Balance</DialogTitle>
+    </DialogHeader>
 
-  {/* INPUT */}
-  <div className="space-y-4">
-    <div>
-      <Label>Amount Sumopod Credit</Label>
-      <Input type="number" placeholder="0" />
+    <div className="space-y-4">
+      {/* Amount Input */}
+      <div>
+        <Label className="text-sm font-medium">Amount Sumopod Credit</Label>
+        <Input 
+          type="number" 
+          placeholder="0"
+          value={topupAmount}
+          onChange={(e) => setTopupAmount(e.target.value)}
+          disabled={isLoadingTopup}
+          className="mt-2"
+        />
+      </div>
+
+      {/* Quick Amount Buttons */}
+      <div className="flex gap-2">
+        {[
+          { label: "50.000", value: 50000 },
+          { label: "100.000", value: 100000 },
+          { label: "200.000", value: 200000 }
+        ].map((option) => (
+          <Button 
+            key={option.value}
+            variant={topupAmount === String(option.value) ? "default" : "outline"}
+            type="button"
+            onClick={() => setTopupAmount(String(option.value))}
+            disabled={isLoadingTopup}
+            className="flex-1"
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Currency Dropdown */}
+      <div>
+        <Label className="text-sm font-medium">Currency</Label>
+        <Select defaultValue="idr">
+          <SelectTrigger className="mt-2">
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="idr">ID IDR - Indonesian Rupiah</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Payment Method Dropdown */}
+      <div>
+        <Label className="text-sm font-medium">Payment Method</Label>
+        <Select defaultValue="qris">
+          <SelectTrigger className="mt-2">
+            <SelectValue placeholder="Select payment method" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="qris">QRIS</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Warning Message */}
+      <div className="flex gap-3 rounded-lg bg-orange-50 p-3">
+        <div className="flex-shrink-0 pt-0.5">
+          <AlertTriangle className="h-5 w-5 text-orange-600" />
+        </div>
+        <div className="text-sm">
+          <p className="text-orange-900 font-medium">
+            Sumopod Credit is <span className="font-semibold">not real money</span> and <span className="font-semibold">cannot be refunded or withdrawn</span> once added to your account.
+          </p>
+        </div>
+      </div>
+
+      {/* Terms and Conditions */}
+      <p className="text-xs text-gray-600">
+        By topping up, you agree to our{" "}
+        <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+        {" "}and{" "}
+        <a href="#" className="text-blue-600 hover:underline">Refund Policy</a>
+        .
+      </p>
     </div>
 
-    {/* QUICK BUTTON */}
-    <div className="flex gap-2">
-      {[50000, 100000, 200000].map((amt) => (
-        <Button key={amt} variant="outline">
-          {amt.toLocaleString("id-ID")}
-        </Button>
-      ))}
-    </div>
+    <DialogFooter>
+      <Button
+        className="w-full"
+        size="lg"
+        disabled={!topupAmount || Number(topupAmount) <= 0 || isLoadingTopup}
+        onClick={async () => {
+          if (!topupAmount || !session?.access_token) {
+            toast({
+              title: "Error",
+              description: "Nominal harus diisi",
+              variant: "destructive"
+            });
+            return;
+          }
 
-    {/* CURRENCY */}
-    <div>
-      <Label>Currency</Label>
-      <Input value="IDR - Indonesian Rupiah" disabled />
-    </div>
+          setIsLoadingTopup(true);
 
-    {/* PAYMENT */}
-    <div>
-      <Label>Payment Method</Label>
-      <Input value="QRIS" disabled />
-    </div>
+          try {
+            const res = await fetch(
+              "https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${session?.access_token}`,
+                },
+                body: JSON.stringify({ 
+                  amount: Number(topupAmount)
+                }),
+              }
+            );
 
-    {/* WARNING */}
-    <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-3">
-      Sumopod Credit is not real money and cannot be refunded or withdrawn.
-    </div>
-  </div> {/* ⬅️ INI YANG SERING KELUPA */}
+            const data = await res.json();
 
-  <DialogFooter>
-    <Button className="w-full">Top Up</Button>
-  </DialogFooter>
-</DialogContent>
-   </Dialog>
+            if (!res.ok) {
+              throw new Error(data?.message || "API Error");
+            }
+
+            if (data.invoice_url) {
+              toast({
+                title: "Success",
+                description: "Redirecting to payment...",
+              });
+              // Reset form sebelum redirect
+              setTopupAmount("");
+              setDialogOpen(false);
+              window.location.href = data.invoice_url;
+            } else {
+              throw new Error("No invoice URL returned");
+            }
+          } catch (err: any) {
+            console.error("Topup error:", err);
+            toast({
+              title: "Error",
+              description: err?.message || "Gagal melakukan top up",
+              variant: "destructive"
+            });
+          } finally {
+            setIsLoadingTopup(false);
+          }
+        }}
+      >
+        {isLoadingTopup ? "Processing..." : "Top Up"}
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
    </div>
 </div>
         
