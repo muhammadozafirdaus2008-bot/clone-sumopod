@@ -15,6 +15,7 @@ import {
   GraduationCap, Users2, MessageSquare, Bot, Wallet,
   Monitor, Database, Globe, Mail, Users, Settings, HelpCircle,
 } from "lucide-react";
+import TopUp from "@/pages/TopUp";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/chat" element={<PlaceholderPage title="Chat" subtitle="Messaging services" icon={<MessageSquare className="h-8 w-8 text-accent-foreground" />} />} />
               <Route path="/ai" element={<PlaceholderPage title="AI" subtitle="AI-powered tools" icon={<Bot className="h-8 w-8 text-accent-foreground" />} />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/topup" element={<TopUp />} />
               <Route path="/wallet" element={<PlaceholderPage title="Wallet" subtitle="Manage your wallet" icon={<Wallet className="h-8 w-8 text-accent-foreground" />} />} />
               {/* INFRASTRUCTURE */}
               <Route path="/vps" element={<PlaceholderPage title="VPS" subtitle="Virtual private servers" icon={<Monitor className="h-8 w-8 text-accent-foreground" />} />} />
