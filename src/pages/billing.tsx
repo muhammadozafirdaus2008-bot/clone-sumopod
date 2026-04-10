@@ -5,14 +5,34 @@ import { supabase } from "../lib/supabase";
 export default function BillingPage() {
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getToken = async () => {
       const { data } = await supabase.auth.getSession();
-      setToken(data.session?.access_token || null);
+
+      const accessToken = data.session?.access_token || null;
+
+      console.log("🔥 TOKEN DARI SUPABASE:", accessToken); // DEBUG
+
+      setToken(accessToken);
+      setLoading(false);
     };
+
     getToken();
   }, []);
+
+  // 🚫 kalau belum login
+  if (!loading && !token) {
+    return (
+      <div className="p-6">
+        <h1 className="text-xl font-semibold">Billing</h1>
+        <p className="text-red-500 mt-2">
+          Kamu belum login. Silakan login dulu.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -77,7 +97,7 @@ export default function BillingPage() {
       <TopUpModal
         open={open}
         onClose={() => setOpen(false)}
-        token={token}
+        token={token} // 🔥 TOKEN DIKIRIM KE MODAL
       />
     </div>
   );
