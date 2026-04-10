@@ -3,20 +3,30 @@ import { useState } from "react";
 type Props = {
   open: boolean;
   onClose: () => void;
-  token: string;
+  token: string | null;
 };
 
 export default function TopUpModal({ open, onClose, token }: Props) {
-  const [amount, setAmount] = useState<number | "">("");
+  const [amount, setAmount] = useState<number>(50000);
   const [loading, setLoading] = useState(false);
 
   if (!open) return null;
 
-  const handleSubmit = async () => {
-    if (!amount) return alert("Masukkan jumlah top up");
+  const handleTopUp = async () => {
+    if (!amount || amount <= 0) {
+      alert("Masukkan amount yang valid");
+      return;
+    }
+
+    if (!token) {
+      alert("User belum login / token tidak ada");
+      return;
+    }
 
     try {
       setLoading(true);
+
+      console.log("SEND:", { amount, token });
 
       const res = await fetch(
         "https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance",
@@ -33,95 +43,102 @@ export default function TopUpModal({ open, onClose, token }: Props) {
       );
 
       const data = await res.json();
+      console.log("RESPONSE:", data);
 
-      if (data?.invoice_url) {
-        window.location.href = data.invoice_url;
-      } else {
-        alert("Gagal mendapatkan invoice");
+      if (!res.ok) {
+        throw new Error(data?.message || "Gagal topup");
       }
-    } catch (err) {
+
+      if (!data.invoice_url) {
+        throw new Error("Invoice URL tidak ditemukan");
+      }
+
+      // ✅ redirect ke invoice
+      window.location.href = data.invoice_url;
+    } catch (err: any) {
       console.error(err);
-      alert("Terjadi error");
+      alert(err.message || "Terjadi error");
     } finally {
       setLoading(false);
     }
   };
 
+  const preset = [50000, 100000, 200000];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
+      {/* overlay */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6 z-10">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">Top Up Balance</h2>
-          <p className="text-sm text-gray-500">
-            Add credits to your account
-          </p>
+      {/* modal */}
+      <div className="relative bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-5">
+        {/* header */}
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Top Up Balance</h2>
+          <button onClick={onClose}>✕</button>
         </div>
 
-        {/* Amount */}
-        <div className="mb-4">
-          <label className="text-sm font-medium">Amount</label>
+        {/* amount */}
+        <div>
+          <label className="text-sm font-medium">
+            Amount Sumopod Credit
+          </label>
           <input
             type="number"
-            placeholder="Enter amount"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
-            className="mt-2 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+            className="w-full mt-2 border rounded-lg px-3 py-2"
           />
         </div>
 
-        {/* Quick Select */}
-        <div className="flex gap-2 mb-4">
-          {[50000, 100000, 200000].map((val) => (
+        {/* preset */}
+        <div className="flex gap-2">
+          {preset.map((item) => (
             <button
-              key={val}
-              onClick={() => setAmount(val)}
-              className={`px-3 py-2 rounded-lg border text-sm ${
-                amount === val
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "hover:bg-gray-100"
+              key={item}
+              onClick={() => setAmount(item)}
+              className={`px-3 py-2 rounded-lg border ${
+                amount === item
+                  ? "bg-blue-600 text-white"
+                  : "bg-white"
               }`}
             >
-              {val.toLocaleString()}
+              {item.toLocaleString("id-ID")}
             </button>
           ))}
         </div>
 
-        {/* Currency */}
-        <div className="mb-4">
+        {/* currency */}
+        <div>
           <label className="text-sm font-medium">Currency</label>
-          <input
-            disabled
-            value="IDR - Indonesian Rupiah"
-            className="mt-2 w-full border rounded-lg px-3 py-2 bg-gray-100"
-          />
+          <div className="mt-2 border rounded-lg px-3 py-2 bg-gray-50">
+            IDR - Indonesian Rupiah
+          </div>
         </div>
 
-        {/* Payment */}
-        <div className="mb-4">
-          <label className="text-sm font-medium">Payment Method</label>
-          <input
-            disabled
-            value="QRIS"
-            className="mt-2 w-full border rounded-lg px-3 py-2 bg-gray-100"
-          />
+        {/* payment */}
+        <div>
+          <label className="text-sm font-medium">
+            Payment Method
+          </label>
+          <div className="mt-2 border rounded-lg px-3 py-2 bg-gray-50">
+            QRIS
+          </div>
         </div>
 
-        {/* Warning */}
-        <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm rounded-lg p-3">
+        {/* note */}
+        <div className="bg-yellow-50 border border-yellow-200 text-sm p-3 rounded-lg">
           Sumopod Credit is not real money and cannot be refunded or withdrawn.
         </div>
 
+        {/* button */}
         <button
-          onClick={handleSubmit}
+          onClick={handleTopUp}
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
         >
           {loading ? "Processing..." : "Top Up"}
         </button>
