@@ -1,157 +1,125 @@
-import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/components/context/AuthContext";
-import {
-  Box, MessageSquare, Bot, Cloud, Wallet,
-  Monitor, Database, Globe, Mail,
-  Receipt, Users, Settings, HelpCircle,
-  GraduationCap, Users2, ChevronDown
-} from "lucide-react";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
-interface NavItem {
-  label: string;
-  path: string;
-  icon: React.ElementType;
-}
-
-interface NavSection {
-  title: string;
-  items: NavItem[];
-}
-
-const sections: NavSection[] = [
-  {
-    title: "LEARNING",
-    items: [
-      { label: "Learn", path: "/learn", icon: GraduationCap },
-      { label: "Community", path: "/community", icon: Users2 },
-    ],
-  },
-  {
-    title: "SERVICES",
-    items: [
-      { label: "Chat", path: "/chat", icon: MessageSquare },
-      { label: "AI", path: "/ai", icon: Bot },
-      { label: "Services", path: "/services", icon: Cloud },
-      { label: "Wallet", path: "/wallet", icon: Wallet },
-    ],
-  },
-  {
-    title: "INFRASTRUCTURE",
-    items: [
-      { label: "VPS", path: "/vps", icon: Monitor },
-      { label: "Database", path: "/database", icon: Database },
-      { label: "Domains", path: "/domains", icon: Globe },
-    ],
-  },
-  {
-    title: "COMMUNICATION",
-    items: [
-      { label: "Email SMTP", path: "/email-smtp", icon: Mail },
-    ],
-  },
-  {
-    title: "ACCOUNT",
-    items: [
-      { label: "Billing", path: "/billing", icon: Receipt },
-      { label: "Affiliate", path: "/affiliate", icon: Users },
-      { label: "Settings", path: "/settings", icon: Settings },
-      { label: "Support", path: "/support", icon: HelpCircle },
-    ],
-  },
-];
-
-const Sidebar = () => {
-  const location = useLocation();
-  const { user } = useAuth();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState(false);
-
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
-    setIsAtBottom(atBottom);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    return () => el.removeEventListener("scroll", checkScroll);
-  }, [checkScroll]);
-
-  const scrollToBottom = () => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  };
+export default function DashboardLayout() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-border bg-card">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <Box className="h-4 w-4 text-primary-foreground" />
-        </div>
-        <span className="text-lg font-bold text-foreground">SumoPod</span>
-      </div>
-
-      {/* Navigation */}
-      <div className="relative flex-1 overflow-hidden">
-        <nav
-          ref={scrollRef}
-          className="h-full overflow-y-auto px-3 py-4 space-y-5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
-        >
-          {sections.map((section) => (
-            <div key={section.title}>
-              <p className="mb-1.5 px-2 text-[11px] font-semibold tracking-wider text-muted-foreground">
-                {section.title}
-              </p>
-              <div className="space-y-0.5">
-                {section.items.map((item) => {
-                  const active = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
-                        active
-                          ? "bg-accent text-primary"
-                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                      }`}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-
-        {/* Scroll for more button - fades out when at bottom */}
+    <div className="flex min-h-screen bg-gray-50">
+      
+      {/* OVERLAY (mobile) */}
+      {isSidebarOpen && (
         <div
-          className={`pointer-events-none absolute bottom-0 left-0 right-0 transition-opacity duration-300 ${
-            isAtBottom ? "opacity-0" : "opacity-100"
-          }`}
-        >
-          <div className="bg-gradient-to-t from-card via-card/80 to-transparent px-3 pb-2 pt-6">
-            <button
-              onClick={scrollToBottom}
-              className="pointer-events-auto flex w-full items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-            >
-              <ChevronDown className="h-4 w-4 animate-bounce" />
-              Scroll for More
-            </button>
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-};
+          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-export default Sidebar;
+      {/* SIDEBAR */}
+      <aside
+        className={`
+        fixed top-0 left-0 h-full w-64 bg-white border-r z-50
+        transform transition-transform duration-300
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0
+      `}
+      >
+        {/* HEADER */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h1 className="font-bold text-lg">SumoPod</h1>
+          <button
+            className="lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* MENU */}
+        <nav className="p-4 space-y-4 text-sm">
+          <div>
+            <p className="text-xs text-gray-400 mb-2">SERVICES</p>
+            <ul className="space-y-1">
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                Chat
+              </li>
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                AI
+              </li>
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                Services
+              </li>
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                Wallet
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-xs text-gray-400 mb-2">INFRASTRUCTURE</p>
+            <ul className="space-y-1">
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                VPS
+              </li>
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                Database
+              </li>
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                Domains
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-xs text-gray-400 mb-2">ACCOUNT</p>
+            <ul className="space-y-1">
+              <li className="p-2 rounded-lg bg-gray-100 font-medium">
+                Billing
+              </li>
+              <li className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                Settings
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      {/* MAIN AREA */}
+      <div className="flex-1 lg:ml-64">
+        
+        {/* TOPBAR */}
+        <header className="flex items-center justify-between p-4 border-b bg-white">
+          {/* LEFT */}
+          <div className="flex items-center gap-2">
+            <button
+              className="lg:hidden"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={22} />
+            </button>
+            <h2 className="font-semibold">Dashboard</h2>
+          </div>
+
+          {/* RIGHT */}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm font-medium">User</p>
+              <p className="text-xs text-gray-500">user@email.com</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
+              U
+            </div>
+          </div>
+        </header>
+
+        {/* CONTENT */}
+        <main className="p-6">
+          <h1 className="text-2xl font-bold mb-2">Billing</h1>
+          <p className="text-gray-500">
+            Manage your balance and view transaction history
+          </p>
+        </main>
+      </div>
+    </div>
+  );
+}
