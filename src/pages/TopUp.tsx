@@ -30,7 +30,7 @@ const TopUp = () => {
     setProcessing(idx);
 
     try {
-     const res = await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook-test/topup-balance", {
+    const res = await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
