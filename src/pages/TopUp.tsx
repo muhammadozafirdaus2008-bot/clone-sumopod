@@ -13,7 +13,7 @@ const packages = [
 ];
 
 const TopUp = () => {
-  const { credits, addCredits } = useAuth();
+ const { credits, user } = useAuth();
   const { toast } = useToast();
   const [processing, setProcessing] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -22,7 +22,18 @@ const TopUp = () => {
     setProcessing(idx);
     // Simulate payment gateway delay
     await new Promise((r) => setTimeout(r, 1500));
-    addCredits(amount);
+   await new Promise((r) => setTimeout(r, 1500));
+
+await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook-test/topup-balance", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    user_id: user?.id,
+    amount: amount
+  })
+});
     setProcessing(null);
     toast({
       title: "Payment successful!",

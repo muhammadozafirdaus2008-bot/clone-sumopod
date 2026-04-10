@@ -7,79 +7,92 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   credits: number;
-  addCredits: (amount: number) => void;
-  spendCredits: (amount: number) => boolean;
+  refreshCredits: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const CREDITS_KEY = "sumopod_credits";
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [credits, setCredits] = useState(100);
+  const [credits, setCredits] = useState(0);
+
+  const fetchCredits = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("Balances")
+      .select("balance")
+      .eq("user_id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching credits:", error.message);
+      return;
+    }
+
+    if (data) setCredits(data.balance);
+  };
+
+  const refreshCredits = async () => {
+    if (user) await fetchCredits(user.id);
+  };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-
-      if (session?.user) {
-        const saved = localStorage.getItem(`${CREDITS_KEY}_${session.user.id}`);
-        if (saved !== null) setCredits(Number(saved));
-        else {
-          setCredits(100);
-          localStorage.setItem(`${CREDITS_KEY}_${session.user.id}`, "100");
-        }
-      }
-    });
-
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) fetchCredits(session.user.id);
+    });
 
-      if (session?.user) {
-        const saved = localStorage.getItem(`${CREDITS_KEY}_${session.user.id}`);
-        if (saved !== null) setCredits(Number(saved));
-        else {
-          setCredits(100);
-          localStorage.setItem(`${CREDITS_KEY}_${session.user.id}`, "100");
-        }
-      }
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+      if (session?.user) fetchCredits(session.user.id);
+      else setCredits(0);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const persist = (userId: string, val: number) => {
-    setCredits(val);
-    localStorage.setItem(`${CREDITS_KEY}_${userId}`, String(val));
-  };
-
-  const addCredits = (amount: number) => {
+  // Realtime subscription — auto update credits saat balance berubah di DB
+  useEffect(() => {
     if (!user) return;
-    persist(user.id, credits + amount);
-  };
 
-  const spendCredits = (amount: number): boolean => {
-    if (!user || credits < amount) return false;
-    persist(user.id, credits - amount);
-    return true;
-  };
+    const channel = supabase
+      .channel("balance-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "Balances",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setCredits((payload.new as { balance: number }).balance);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    setCredits(0);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, credits, addCredits, spendCredits, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, credits, refreshCredits, signOut }}>
       {children}
     </AuthContext.Provider>
   );
