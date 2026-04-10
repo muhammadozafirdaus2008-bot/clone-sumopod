@@ -1,179 +1,75 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, QrCode, CreditCard, Receipt } from "lucide-react";
+import TopUpModal from "../components/TopUpModal";
 
-export default function Billing() {
+export default function BillingPage() {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
+
+  // TODO: ganti dengan token asli dari supabase
+  const token = "YOUR_SUPABASE_TOKEN";
 
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Billing</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-semibold">Billing</h1>
+          <p className="text-gray-500 text-sm">
             Manage your balance and view transaction history
           </p>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <QrCode className="w-4 h-4 mr-1" />
+          <button className="px-4 py-2 rounded-lg border bg-white">
             Redeem
-          </Button>
+          </button>
 
-          <Button size="sm" onClick={() => setOpen(true)}>
-            <Plus className="w-4 h-4 mr-1" />
-            Topup
-          </Button>
+          <button
+            onClick={() => setOpen(true)}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white"
+          >
+            + Topup
+          </button>
         </div>
       </div>
 
-      {/* CURRENT CREDIT */}
-      <Card>
-        <CardContent className="flex items-center gap-4 py-5">
-          <div className="p-3 rounded-lg bg-accent">
-            <CreditCard className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">
-              Current Credits
-            </p>
-            <p className="text-3xl font-bold">0</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* CARD CREDIT */}
+      <div className="bg-white rounded-xl border p-4 flex items-center gap-4">
+        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+          💳
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Current Credits</p>
+          <p className="text-xl font-semibold">0</p>
+        </div>
+      </div>
 
       {/* WARNING */}
-      <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm p-4 rounded-lg">
-        Sumopod Credit is <b>not real money</b> and cannot be refunded or withdrawn once added to your account.
+      <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm rounded-lg p-4">
+        Sumopod Credit is not real money and cannot be refunded or withdrawn once added to your account.
       </div>
 
       {/* TABS */}
-      <Tabs defaultValue="transactions">
-        <TabsList>
-          <TabsTrigger value="transactions" className="gap-1">
-            <Receipt className="w-4 h-4" />
+      <div className="bg-white rounded-xl border p-4">
+        <div className="flex gap-4 mb-4">
+          <button className="px-3 py-1 rounded-lg bg-blue-50 text-blue-600">
             Transactions
-          </TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-        </TabsList>
+          </button>
+          <button className="px-3 py-1 text-gray-500">
+            Payments
+          </button>
+        </div>
 
-        <TabsContent value="transactions">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>DATE</TableHead>
-                    <TableHead>DESCRIPTION</TableHead>
-                    <TableHead>TYPE</TableHead>
-                    <TableHead>AMOUNT</TableHead>
-                    <TableHead>ACTIONS</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center h-32 text-muted-foreground">
-                      No transactions found
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <div className="text-center text-gray-400 py-10">
+          No transactions found
+        </div>
+      </div>
 
-        <TabsContent value="payments">
-          <Card>
-            <CardContent className="text-center py-10 text-muted-foreground">
-              No payments found
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* ================= MODAL TOP UP ================= */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Top Up Balance</DialogTitle>
-            <DialogDescription>
-              Add credits to your account
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* INPUT */}
-            <div>
-              <Label>Amount</Label>
-              <Input
-                type="number"
-                placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-
-            {/* QUICK BUTTON */}
-            <div className="flex gap-2">
-              {[50000, 100000, 200000].map((amt) => (
-                <Button
-                  key={amt}
-                  variant="outline"
-                  onClick={() => setAmount(String(amt))}
-                >
-                  {amt.toLocaleString("id-ID")}
-                </Button>
-              ))}
-            </div>
-
-            {/* CURRENCY */}
-            <div>
-              <Label>Currency</Label>
-              <Input value="IDR - Indonesian Rupiah" disabled />
-            </div>
-
-            {/* PAYMENT */}
-            <div>
-              <Label>Payment Method</Label>
-              <Input value="QRIS" disabled />
-            </div>
-
-            {/* WARNING */}
-            <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-3">
-              Sumopod Credit is not real money and cannot be refunded or withdrawn.
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button className="w-full">
-              Top Up
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* MODAL */}
+      <TopUpModal
+        open={open}
+        onClose={() => setOpen(false)}
+        token={token}
+      />
     </div>
   );
 }
