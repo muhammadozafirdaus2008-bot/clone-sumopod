@@ -16,8 +16,23 @@ import {
   GraduationCap, Users2, MessageSquare, Bot, Wallet,
   Monitor, Database, Globe, Mail, Users, Settings, HelpCircle,
 } from "lucide-react";
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
+const [todos, setTodos] = useState([])
 
 const queryClient = new QueryClient();
+  useEffect(() => {
+    async function getTodos() {
+      const { data } = await supabase.from('todos').select()
+
+      if (data) {
+        setTodos(data)
+      }
+    }
+
+    getTodos()
+  }, [])
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
