@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from("Balances")
       .select("balance")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle(); // ✅ FIX
 
     if (error) {
       console.error("Error fetching credits:", error.message);
@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -47,7 +46,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) fetchCredits(session.user.id);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -59,7 +57,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Realtime subscription — auto update credits saat balance berubah di DB
   useEffect(() => {
     if (!user) return;
 

@@ -13,32 +13,47 @@ const packages = [
 ];
 
 const TopUp = () => {
- const { credits, user } = useAuth();
+  const { credits, user } = useAuth();
   const { toast } = useToast();
   const [processing, setProcessing] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
 
   const handleTopUp = async (amount: number, idx: number) => {
-    setProcessing(idx);
-    // Simulate payment gateway delay
-    await new Promise((r) => setTimeout(r, 1500));
-   await new Promise((r) => setTimeout(r, 1500));
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "User not logged in",
+      });
+      return;
+    }
 
-await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook-test/topup-balance", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    user_id: user?.id,
-    amount: amount
-  })
-});
+    setProcessing(idx);
+
+    try {
+      await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          amount: amount
+        })
+      });
+
+      toast({
+        title: "Top up request sent!",
+        description: "Waiting for payment confirmation...",
+      });
+
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to top up",
+      });
+    }
+
     setProcessing(null);
-    toast({
-      title: "Payment successful!",
-      description: `${amount} credits have been added to your account.`,
-    });
   };
 
   return (
@@ -55,7 +70,9 @@ await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook-test/topup-bala
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Current balance</p>
-            <p className="text-3xl font-bold text-foreground">{credits} <span className="text-base font-normal text-muted-foreground">credits</span></p>
+            <p className="text-3xl font-bold text-foreground">
+              {credits} <span className="text-base font-normal text-muted-foreground">credits</span>
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -71,7 +88,9 @@ await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook-test/topup-bala
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{pkg.amount} Credits</CardTitle>
                 {pkg.bonus && (
-                  <span className="rounded-full bg-success px-2 py-0.5 text-xs font-medium text-success-foreground">{pkg.bonus}</span>
+                  <span className="rounded-full bg-success px-2 py-0.5 text-xs font-medium text-success-foreground">
+                    {pkg.bonus}
+                  </span>
                 )}
               </div>
               <CardDescription className="flex items-center gap-1">
@@ -85,9 +104,14 @@ await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook-test/topup-bala
                 onClick={(e) => { e.stopPropagation(); handleTopUp(pkg.amount, idx); }}
               >
                 {processing === idx ? (
-                  <span className="flex items-center gap-2"><span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> Processing...</span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                    Processing...
+                  </span>
                 ) : (
-                  <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Purchase</span>
+                  <span className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" /> Purchase
+                  </span>
                 )}
               </Button>
             </CardContent>
