@@ -1,131 +1,88 @@
 import { useState } from "react";
-import { Loader2, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useAuth } from "@/components/context/AuthContext";
 
-interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-  session: any;
+interface TopUpModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export default function TopUpModal({ isOpen, onClose, session }: Props) {
-  const [amount, setAmount] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { addCredits } = useAuth();
+export default function TopUpModal({ open, onOpenChange }: TopUpModalProps) {
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
 
-  const handleSetAmount = (value: number) => {
-    setAmount(String(value));
-  };
-
-  const handleSubmit = async () => {
-    if (!amount || Number(amount) <= 0) {
-      toast({
-        title: "Error",
-        description: "Masukkan nominal yang valid",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // simulasi sukses
-      await new Promise((r) => setTimeout(r, 1000));
-
-      addCredits(Number(amount));
-
-      toast({
-        title: "Success",
-        description: "Top up berhasil!",
-      });
-
-      setAmount("");
-      onClose();
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Gagal top up",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
+  const amounts = [50000, 100000, 200000];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md shadow-xl mx-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-2xl shadow-lg">
         
-        {/* Header */}
-        <div className="flex justify-between p-6 border-b">
-          <h2 className="font-semibold">Top Up Balance</h2>
-          <button onClick={onClose}>✕</button>
-        </div>
+        {/* HEADER */}
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">
+            Top Up Balance
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Add credits to your account
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="p-6 space-y-4">
-          <div>
+        {/* BODY */}
+        <div className="space-y-6">
+          
+          {/* AMOUNT INPUT */}
+          <div className="space-y-2">
             <Label>Amount</Label>
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+            <Input type="number" placeholder="Enter amount" />
           </div>
 
+          {/* QUICK BUTTON */}
           <div className="flex gap-2">
-            {[50000, 100000, 200000].map((val) => (
+            {amounts.map((amt) => (
               <Button
-                key={val}
-                variant={amount === String(val) ? "default" : "outline"}
-                onClick={() => handleSetAmount(val)}
+                key={amt}
+                type="button"
+                variant={selectedAmount === amt ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => setSelectedAmount(amt)}
               >
-                {val}
+                {amt.toLocaleString("id-ID")}
               </Button>
             ))}
           </div>
 
-          <div className="flex gap-2 bg-orange-50 p-3 rounded">
-            <AlertTriangle className="h-5 w-5 text-orange-600" />
-            <p className="text-sm">
-              Credit tidak bisa direfund
-            </p>
+          {/* CURRENCY */}
+          <div className="space-y-2">
+            <Label>Currency</Label>
+            <Input value="IDR - Indonesian Rupiah" disabled />
+          </div>
+
+          {/* PAYMENT METHOD */}
+          <div className="space-y-2">
+            <Label>Payment Method</Label>
+            <Input value="QRIS" disabled />
+          </div>
+
+          {/* WARNING */}
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+            Sumopod Credit is not real money and cannot be refunded or withdrawn.
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t">
-          <Button
-            onClick={handleSubmit}
-            disabled={!amount || isLoading}
-            className="w-full"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="animate-spin mr-2" />
-                Processing...
-              </>
-            ) : (
-              "Top Up"
-            )}
-          </Button>
-        </div>
-      </div>
-    </div>
+        {/* FOOTER */}
+        <DialogFooter>
+          <Button className="w-full">Top Up</Button>
+        </DialogFooter>
+
+      </DialogContent>
+    </Dialog>
   );
 }
