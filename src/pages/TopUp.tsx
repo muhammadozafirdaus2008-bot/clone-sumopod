@@ -30,16 +30,21 @@ const TopUp = () => {
     setProcessing(idx);
 
     try {
-      await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          amount: amount
-        })
-      });
+     const res = await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook-test/topup-balance", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    user_id: user.id,
+    amount: amount
+  })
+});
+
+const data = await res.json();
+
+// 🔥 INI YANG BIKIN PINDAH KE QRIS
+window.location.href = data.invoice_url;
 
       toast({
         title: "Top up request sent!",
