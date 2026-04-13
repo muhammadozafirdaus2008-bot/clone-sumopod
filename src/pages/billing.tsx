@@ -20,6 +20,8 @@ interface Transaction {
   id: string;
   user_id: string;
   amount: number;
+  type: string;
+  description: string;
   status: string;
   created_at?: string;
 }
@@ -268,6 +270,8 @@ const Billing = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>DATE</TableHead>
+                    <TableHead>DESCRIPTION</TableHead>
+                    <TableHead>TYPE</TableHead>
                     <TableHead>AMOUNT</TableHead>
                     <TableHead>STATUS</TableHead>
                   </TableRow>
@@ -285,15 +289,22 @@ const Billing = () => {
                         <TableCell>
                           {t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-"}
                         </TableCell>
-                        <TableCell className="font-medium">
-                          {t.amount.toLocaleString("id-ID")}
-                        </TableCell>
-                        <TableCell>
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(t.status)}`}>
-                            {t.status}
-                          </span>
-                        </TableCell>
-                      </TableRow>
+                         <TableCell>{t.description || "-"}</TableCell>
+                         <TableCell>
+                          <span className={`inline-flex items-center gap-1 text-sm font-medium ${t.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
+                            {t.type === "Purchase" ? "↑" : "↓"} {t.type || "-"}
+                           </span>
+                         </TableCell>
+                         <TableCell className={`font-medium ${ t.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
+                          {t.type === "Purchase" ? "+" : "-"}{t.amount.toLocaleString("id-ID")} credits
+                          </TableCell>
+                         <TableCell>
+                         <Button variant="outline" size="sm" className="gap-1.5">
+                            <Receipt className="h-3.5 w-3.5" />
+                              Receipt
+                              </Button>
+                            </TableCell>
+                            </TableRow>
                     ))
                   )}
                 </TableBody>

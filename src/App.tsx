@@ -19,6 +19,7 @@ import {
 
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +48,7 @@ export default function App() {
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Navigate to="/services" replace />} />
+              <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
 
