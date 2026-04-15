@@ -220,9 +220,9 @@ const Billing = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950/30">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-              <p className="text-sm text-amber-800 dark:text-amber-300">
+            <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <p className="text-sm text-amber-800">
                 Sumopod Credit is <strong>not real money</strong> and{" "}
                 <strong>cannot be refunded or withdrawn</strong> once added to your account.
               </p>
@@ -239,44 +239,47 @@ const Billing = () => {
         </DialogContent>
       </Dialog>
  
-      {/* Current Credits */}
+      {/* Current Credits + Warning dalam 1 Card */}
       <Card className="mb-6">
-        <CardContent className="flex items-center gap-4 py-5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-            <CreditCard className="h-6 w-6 text-blue-500" />
+        <CardContent className="p-0">
+          {/* Current Credits */}
+          <div className="flex items-center gap-4 px-5 py-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
+              <CreditCard className="h-6 w-6 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Current Credits</p>
+              <p className="text-3xl font-bold text-foreground">{formatNumber(credits)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Current Credits</p>
-            <p className="text-3xl font-bold text-foreground">{formatNumber(credits)}</p>
+ 
+          {/* Warning */}
+          <div className="flex items-center gap-3 border-t border-amber-200 bg-amber-50 px-4 py-3 rounded-b-lg">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
+            <p className="text-sm text-amber-800">
+              Sumopod Credit is <strong>not real money</strong> and{" "}
+              <strong>cannot be refunded or withdrawn</strong> once added to your account.
+            </p>
           </div>
         </CardContent>
       </Card>
  
-      {/* Warning */}
-      <div className="mb-6 flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950/30">
-        <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-        <p className="text-sm text-amber-800 dark:text-amber-300">
-          Sumopod Credit is <strong>not real money</strong> and{" "}
-          <strong>cannot be refunded or withdrawn</strong> once added to your account.
-        </p>
-      </div>
- 
-      {/* Tabs */}
+      {/* Tabs Card */}
       <Card>
         <CardContent className="p-0">
           <Tabs defaultValue="transactions">
-            <div className="px-4 pt-4 pb-0">
-              <TabsList className="bg-transparent p-0 h-auto gap-1 border-none justify-start">
+            <div className="px-4 pt-2 pb-0 border-b border-gray-200">
+              <TabsList className="bg-gray-100 p-1 h-auto gap-1 rounded-lg">
                 <TabsTrigger
                   value="transactions"
-                  className="gap-1.5 px-4 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground"
+                  className="gap-1.5 px-4 py-2 rounded-md text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground"
                 >
                   <CreditCard className="h-4 w-4" />
                   Transactions
                 </TabsTrigger>
                 <TabsTrigger
                   value="payments"
-                  className="gap-1.5 px-4 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground"
+                  className="gap-1.5 px-4 py-2 rounded-md text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground"
                 >
                   <Receipt className="h-4 w-4" />
                   Payments
@@ -289,11 +292,11 @@ const Billing = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-32">DATE</TableHead>
-                    <TableHead>DESCRIPTION</TableHead>
-                    <TableHead className="w-32">TYPE</TableHead>
-                    <TableHead className="w-40">AMOUNT</TableHead>
-                    <TableHead className="w-28 text-right">ACTIONS</TableHead>
+                    <TableHead className="w-64">DATE</TableHead>
+                    <TableHead className="w-64">DESCRIPTION</TableHead>
+                    <TableHead className="w-27">TYPE</TableHead>
+                    <TableHead className="w-50">AMOUNT</TableHead>
+                    <TableHead className="w-20">ACTIONS</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -391,3 +394,24 @@ const Billing = () => {
 };
  
 export default Billing;
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

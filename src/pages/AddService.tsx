@@ -4,7 +4,8 @@ import { useAuth } from "@/components/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Cloud, Search } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { ArrowLeft, Cloud, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface ServiceTemplate {
@@ -16,21 +17,24 @@ interface ServiceTemplate {
 }
 
 const serviceTemplates: ServiceTemplate[] = [
-  { id: "activepieces", name: "Activepieces", description: "Automation Alternative to Zapier, easier than n8n", price: "Starts from Rp 60.000/month", cost: 60 },
-  { id: "go-whatsapp", name: "Go WhatsApp by Aldinokemal", description: "Simple, Light, Easy WhatsApp Unofficial API", price: "Starts from Rp 15.000/month", cost: 15 },
-  { id: "n8n", name: "n8n", description: "Automation using n8n", price: "Starts from Rp 15.000/month", cost: 15 },
-  { id: "n8n-ffmpeg", name: "n8n (ffmpeg included)", description: "n8n with ffmpeg installed", price: "Starts from Rp 15.000/month", cost: 15 },
-  { id: "waha-gows", name: "WAHA Plus Cloud - GOWS", description: "WhatsApp API Unofficial with WAHA Plus GOWS Engine", price: "Starts from Rp 15.000/month", cost: 15 },
-  { id: "waha-noweb", name: "WAHA Plus Cloud - NOWEB", description: "WhatsApp API Unofficial with WAHA Plus NOWEB Engine", price: "Starts from Rp 15.000/month", cost: 15 },
-  { id: "evolution-api", name: "Evolution API", description: "Multi-device WhatsApp API with webhook support", price: "Starts from Rp 20.000/month", cost: 20 },
-  { id: "typebot", name: "Typebot", description: "Open-source chatbot builder alternative to Landbot", price: "Starts from Rp 25.000/month", cost: 25 },
-  { id: "chatwoot", name: "Chatwoot", description: "Open-source customer engagement platform", price: "Starts from Rp 30.000/month", cost: 30 },
+  { id: "activepieces", name: "Activepieces", description: "Automation Alternative to Zapier, easier than n8n", price: "Starts from Rp 60.000/month", cost: 60000 },
+  { id: "go-whatsapp", name: "Go WhatsApp by Aldinokemal", description: "Simple, Light, Easy WhatsApp Unofficial API", price: "Starts from Rp 15.000/month", cost: 15000 },
+  { id: "n8n", name: "n8n", description: "Automation using n8n", price: "Starts from Rp 15.000/month", cost: 15000 },
+  { id: "n8n-ffmpeg", name: "n8n (ffmpeg included)", description: "n8n with ffmpeg installed", price: "Starts from Rp 15.000/month", cost: 15000 },
+  { id: "waha-gows", name: "WAHA Plus Cloud - GOWS", description: "WhatsApp API Unofficial with WAHA Plus GOWS Engine", price: "Starts from Rp 15.000/month", cost: 15000 },
+  { id: "waha-noweb", name: "WAHA Plus Cloud - NOWEB", description: "WhatsApp API Unofficial with WAHA Plus NOWEB Engine", price: "Starts from Rp 15.000/month", cost: 15000 },
+  { id: "evolution-api", name: "Evolution API", description: "Multi-device WhatsApp API with webhook support", price: "Starts from Rp 20.000/month", cost: 20000 },
+  { id: "typebot", name: "Typebot", description: "Open-source chatbot builder alternative to Landbot", price: "Starts from Rp 25.000/month", cost: 25000 },
+  { id: "chatwoot", name: "Chatwoot", description: "Open-source customer engagement platform", price: "Starts from Rp 30.000/month", cost: 30000 },
 ];
 
 const AddService = () => {
   const navigate = useNavigate();
-  const { spendCredits } = useAuth();
+  const { user, refreshCredits } = useAuth();
   const [search, setSearch] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<ServiceTemplate | null>(null);
+  const [serviceName, setServiceName] = useState("");
+  const [deploying, setDeploying] = useState(false);
 
   const filtered = serviceTemplates.filter(
     (s) =>
@@ -38,14 +42,30 @@ const AddService = () => {
       s.description.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDeploy = (template: ServiceTemplate) => {
-    if (spendCredits(template.cost)) {
-      toast.success(`${template.name} deployed! ${template.cost} credits deducted.`);
-      navigate("/services");
-    } else {
-      toast.error("Insufficient credits to deploy this service.");
-    }
-  };
+  const handleDeploy = async () => {
+  if (!selectedTemplate || !user) return;
+
+  setDeploying(true);
+
+  try {
+    const { data, error } = await supabase.rpc("deploy_service", {
+      p_user_id: user.id,
+      p_service_name: serviceName,
+      p_package: selectedTemplate.id,
+      p_cost: selectedTemplate.cost,
+    });
+
+    if (error) throw error;
+
+    toast.success("Deploy sedang diproses...");
+    navigate("/services");
+
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setDeploying(false);
+  }
+};
 
   return (
     <div>
@@ -87,7 +107,13 @@ const AddService = () => {
                 <p className="mt-1 text-sm text-muted-foreground">{template.description}</p>
               </div>
               <p className="text-sm text-muted-foreground">{template.price}</p>
-              <Button className="mt-auto w-full gap-2" onClick={() => handleDeploy(template)}>
+              <Button
+                className="mt-auto w-full gap-2"
+                onClick={() => {
+                  setSelectedTemplate(template);
+                  setServiceName("");
+                }}
+              >
                 <Cloud className="h-4 w-4" />
                 Deploy
               </Button>
@@ -99,6 +125,67 @@ const AddService = () => {
       {filtered.length === 0 && (
         <div className="py-16 text-center text-muted-foreground">
           No services found matching "{search}"
+        </div>
+      )}
+
+      {/* Dialog */}
+      {selectedTemplate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
+            
+            {/* Dialog Header */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Deploy {selectedTemplate.name}</h2>
+              <button
+                onClick={() => setSelectedTemplate(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Input Nama Service */}
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-foreground">
+                Nama Service
+              </label>
+              <Input
+                placeholder="contoh: n8n-toko-saya"
+                value={serviceName}
+                onChange={(e) => setServiceName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleDeploy()}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Gunakan huruf kecil, angka, dan tanda hubung saja
+              </p>
+            </div>
+
+            {/* Info Harga */}
+            <div className="mb-5 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+              Biaya: <span className="font-semibold text-foreground">{selectedTemplate.price}</span>
+            </div>
+
+            {/* Tombol */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setSelectedTemplate(null)}
+                disabled={deploying}
+              >
+                Batal
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={handleDeploy}
+                disabled={deploying}
+              >
+                <Cloud className="h-4 w-4" />
+                {deploying ? "Deploying..." : "Deploy Sekarang"}
+              </Button>
+            </div>
+
+          </div>
         </div>
       )}
     </div>

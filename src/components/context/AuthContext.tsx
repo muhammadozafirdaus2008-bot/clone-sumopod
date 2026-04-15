@@ -9,6 +9,7 @@ interface AuthContextType {
   credits: number;
   refreshCredits: () => Promise<void>;
   signOut: () => Promise<void>;
+  spendCredits: (amount: number, description: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +38,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshCredits = async () => {
     if (user) await fetchCredits(user.id);
   };
+
+ const spendCredits = async (amount: number, description: string) => {
+  const { data, error } = await supabase.rpc("spend_credits", {
+    p_amount: amount,
+    p_description: description,
+  });
+
+  if (error) {
+    console.error("spendCredits error:", error.message);
+    return false;
+  }
+
+  return data === true;
+};
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -89,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, credits, refreshCredits, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, credits, spendCredits, refreshCredits, signOut }}>
       {children}
     </AuthContext.Provider>
   );
