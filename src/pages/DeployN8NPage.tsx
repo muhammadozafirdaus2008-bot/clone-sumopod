@@ -49,6 +49,16 @@ export default function DeployN8NPage() {
       return;
     }
 
+    
+    if (!session.access_token) {
+      toast({
+        title: "Error",
+        description: "Token tidak tersedia",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!agreedToTerms) {
       toast({
         title: "Error",
@@ -67,6 +77,14 @@ export default function DeployN8NPage() {
       return;
     }
 
+    
+    console.log("DEBUG DEPLOY:", {
+      serviceName,
+      template: selectedTemplate.id,
+      cost: selectedTemplate.cost,
+      token: session?.access_token,
+    });
+
     setLoading(true);
 
     try {
@@ -77,6 +95,9 @@ export default function DeployN8NPage() {
         session.access_token
       );
 
+    
+      console.log("Deploy success response:", response);
+
       toast({
         title: "Deploy Berhasil! 🚀",
         description: `Service sedang di-deploy. Tunggu 10-30 detik...`,
@@ -86,7 +107,9 @@ export default function DeployN8NPage() {
         navigate("/instances");
       }, 2000);
     } catch (err: any) {
-      console.error("Deploy error:", err);
+     
+      console.error("FULL ERROR:", err);
+
       toast({
         title: "Deploy Gagal",
         description: err.message,
@@ -144,6 +167,7 @@ export default function DeployN8NPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleDeploy} className="space-y-6">
+
             {/* Service Name */}
             <div className="space-y-2">
               <Label htmlFor="service-name">Nama Service</Label>
@@ -213,13 +237,12 @@ export default function DeployN8NPage() {
               </div>
             </div>
 
-            {/* Terms Agreement */}
+            {/* Terms */}
             <div className="border-l-4 border-amber-500 bg-amber-50 p-4">
               <p className="font-semibold text-amber-900 mb-3">⚠️ Terms of Service</p>
               <p className="text-sm text-amber-800 mb-3">
                 By deploying this service, you agree that you will not use this service for any illegal
-                activities. If illegal activities are detected, your service will be terminated automatically
-                without prior notice.
+                activities.
               </p>
               <label className="flex items-center gap-3 cursor-pointer">
                 <Checkbox
@@ -259,6 +282,7 @@ export default function DeployN8NPage() {
                 )}
               </Button>
             </div>
+
           </form>
         </CardContent>
       </Card>

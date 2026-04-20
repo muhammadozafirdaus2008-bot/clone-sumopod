@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+const [instances, setInstances] = useState([]);
 import { useAuth } from "@/components/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,14 @@ export default function DeployN8NPage() {
   const [template, setTemplate] = useState("n8n-basic");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [instances, setInstances] = useState([]);
+  useEffect(() => {
+  fetch("http://43.134.70.47:4000/instances")
+    .then((res) => res.json())
+    .then((data) => setInstances(data))
+    .catch((err) => console.error(err));
+}, []);
 
   const selectedTemplate = TEMPLATES.find((t) => t.id === template)!;
   const hasEnoughCredits = credits >= selectedTemplate.cost;
@@ -248,7 +257,7 @@ export default function DeployN8NPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-2 w-2 animate-spin" />
                     Deploying...
                   </>
                 ) : (

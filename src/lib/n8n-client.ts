@@ -1,4 +1,4 @@
-const N8N_WEBHOOK_URL = "http://n8n.43.134.70.47.sslip.io/webhook/deploy-service";
+const N8N_WEBHOOK_URL = "https://n8n.ghozali.biz.id/webhook/deploy-service";
 
 export async function deployN8nService(
   serviceName: string,
@@ -6,27 +6,35 @@ export async function deployN8nService(
   cost: number,
   token: string
 ) {
+  console.log("CALLING N8N:", {
+    serviceName,
+    template,
+    cost,
+    token,
+  });
+
+  const res = await fetch(N8N_WEBHOOK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // 🔥 penting
+    },
+    body: JSON.stringify({
+      serviceName,
+      template,
+      cost,
+    }),
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(text || "Deploy failed");
+  }
+
   try {
-    const res = await fetch(N8N_WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        serviceName,
-        template,
-        cost,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to deploy service");
-    }
-
-    return await res.json();
-  } catch (err) {
-    console.error("Deploy error:", err);
-    throw err;
+    return JSON.parse(text);
+  } catch {
+    return text;
   }
 }
