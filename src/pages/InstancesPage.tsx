@@ -78,7 +78,7 @@ export default function DeployN8NPage() {
     setLoading(true);
 
     try {
-      const response = await deployN8nService(
+      await deployN8nService(serviceName.trim());(
         serviceName.trim(),
         selectedTemplate.id,
         selectedTemplate.cost,

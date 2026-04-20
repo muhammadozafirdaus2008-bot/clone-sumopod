@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Cloud, Search } from "lucide-react";
 import { toast } from "sonner";
-import { deployN8nService, DEPLOY_SERVICE_WEBHOOK } from "@/lib/n8n-client";
+import { deployN8nService, } from "@/lib/n8n-client";
 import {
   Dialog,
   DialogContent,
@@ -102,29 +102,30 @@ const AddService = () => {
     setDeploying(true);
 
     try {
-      const response = await deployN8nService(
-        serviceName.trim(),
-        selectedTemplate.template,
-        selectedTemplate.cost,
-        session.access_token
-      );
+      try {
+  await deployN8nService(serviceName.trim());(
+    serviceName.trim(),
+    selectedTemplate.template,
+    selectedTemplate.cost,
+    session.access_token
+  );
 
-      if (response.success) {
-        toast.success("🚀 Deploy berhasil! Service sedang di-setup...");
-        
-        // Reset form
-        setSelectedTemplate(null);
-        setServiceName("");
-        setShowAgreement(false);
-        setAgreedToTerms(false);
+  toast.success("🚀 Deploy berhasil! Service sedang di-setup...");
 
-        // Redirect ke instances dalam 2 detik
-        setTimeout(() => {
-          navigate("/instances");
-        }, 2000);
-      } else {
-        toast.error(response.message || "Deploy gagal");
-      }
+  setSelectedTemplate(null);
+  setServiceName("");
+  setShowAgreement(false);
+  setAgreedToTerms(false);
+
+  setTimeout(() => {
+    navigate("/instances");
+  }, 2000);
+
+} catch (err: any) {
+  console.error("Deploy error:", err);
+
+  toast.error("Deploy gagal");
+}
     } catch (err: any) {
       console.error("Deploy error:", err);
       toast.error(err.message || "Tidak bisa connect ke server");
