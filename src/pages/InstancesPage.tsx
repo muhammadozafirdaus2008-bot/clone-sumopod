@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-const [instances, setInstances] = useState([]);
 import { useAuth } from "@/components/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -145,6 +144,29 @@ export default function DeployN8NPage() {
           </CardContent>
         </Card>
       )}
+      <div className="mt-6 space-y-4">
+  <h2 className="text-xl font-bold">My Instances</h2>
+
+  {instances.length === 0 ? (
+    <p className="text-muted-foreground">No instances found</p>
+  ) : (
+    instances.map((inst: any, i) => (
+      <div key={i} className="border p-4 rounded-lg">
+        <p className="font-bold">{inst.service_name}</p>
+        <p>Port: {inst.port}</p>
+        <p>Status: {inst.status}</p>
+
+        <a
+          href={inst.url}
+          target="_blank"
+          className="text-blue-500 underline"
+        >
+          Open n8n
+        </a>
+      </div>
+    ))
+  )}
+</div>
 
       {/* Form Card */}
       <Card>
