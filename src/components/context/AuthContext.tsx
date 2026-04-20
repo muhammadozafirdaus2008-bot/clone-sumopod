@@ -2,14 +2,17 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
 
+;
+
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  accessToken: string | null;
   loading: boolean;
   credits: number;
   refreshCredits: () => Promise<void>;
   signOut: () => Promise<void>;
-  spendCredits: (amount: number, description: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from("Balances")
       .select("balance")
       .eq("user_id", userId)
-      .maybeSingle(); // ✅ FIX
+      .maybeSingle();
 
     if (error) {
       console.error("Error fetching credits:", error.message);
@@ -38,20 +41,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshCredits = async () => {
     if (user) await fetchCredits(user.id);
   };
-
- const spendCredits = async (amount: number, description: string) => {
-  const { data, error } = await supabase.rpc("spend_credits", {
-    p_amount: amount,
-    p_description: description,
-  });
-
-  if (error) {
-    console.error("spendCredits error:", error.message);
-    return false;
-  }
-
-  return data === true;
-};
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -104,7 +93,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, credits, spendCredits, refreshCredits, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, session, accessToken: session?.access_token, loading, credits, refreshCredits, signOut }}>
       {children}
     </AuthContext.Provider>
   );

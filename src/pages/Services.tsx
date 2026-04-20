@@ -1,46 +1,43 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Plus } from "lucide-react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface Service {
   id: string;
-  name: string;
-  type: string;
-  status: "active" | "inactive" | "pending";
-  plan: string;
-  autoRenewal: boolean;
-  expiry: string;
+  service_name: string;
+  package: string;
+  status: string;
+  url: string;
+  created_at: string;
 }
 
 const Services = () => {
-  const { toast } = useToast();
-  const [services, setServices] = useState<Service[]>([]);
-  const { credits, spendCredits } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddService = () => {
-    const newService: Service = {
-      id: crypto.randomUUID(),
-      name: `service-${Date.now().toString(36)}`,
-      type: "Web Server",
-      status: "active",
-      plan: "Basic",
-      autoRenewal: true,
-      expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-    };
+  const fetchServices = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("instances")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-    if (spendCredits(10)) {
-      setServices((prev) => [...prev, newService]);
-      toast({ title: "Service added", description: `${newService.name} has been created. 10 credits deducted.` });
-    } else {
-      toast({ title: "Insufficient credits", description: "You need at least 10 credits.", variant: "destructive" });
-    }
+    if (!error && data) setServices(data);
+    setLoading(false);
   };
+
+  useEffect(() => {
+    fetchServices();
+  }, [user]);
 
   return (
     <div>
@@ -50,7 +47,7 @@ const Services = () => {
           <p className="text-sm text-muted-foreground">Manage your managed services</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={fetchServices}>
             <RefreshCw className="mr-1.5 h-4 w-4" />
             Refresh
           </Button>
@@ -67,43 +64,49 @@ const Services = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>NAME</TableHead>
-                <TableHead>TYPE</TableHead>
+                <TableHead>PACKAGE</TableHead>
                 <TableHead>STATUS</TableHead>
-                <TableHead>PLAN</TableHead>
-                <TableHead>AUTO RENEWAL</TableHead>
-                <TableHead>EXPIRY</TableHead>
-                <TableHead>ACTIONS</TableHead>
+                <TableHead>URL</TableHead>
+                <TableHead>CREATED</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {services.length === 0 ? (
+              {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                    No services found matching your criteria
+                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : services.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                    No services yet. Click "Add Service" to get started!
                   </TableCell>
                 </TableRow>
               ) : (
                 services.map((s) => (
                   <TableRow key={s.id}>
-                    <TableCell className="font-medium">{s.name}</TableCell>
-                    <TableCell>{s.type}</TableCell>
+                    <TableCell className="font-medium">{s.service_name}</TableCell>
+                    <TableCell>{s.package}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        s.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                        s.status === "active" ? "bg-green-100 text-green-700" :
+                        s.status === "Deploying" ? "bg-yellow-100 text-yellow-700" :
+                        "bg-muted text-muted-foreground"
                       }`}>
                         {s.status}
                       </span>
                     </TableCell>
-                    <TableCell>{s.plan}</TableCell>
-                    <TableCell>{s.autoRenewal ? "Yes" : "No"}</TableCell>
-                    <TableCell>{s.expiry}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => {
-                        setServices((prev) => prev.filter((x) => x.id !== s.id));
-                        toast({ title: "Service removed" });
-                      }}>
-                        Remove
-                      </Button>
+                      {s.url ? (
+                        <a href={s.url} target="_blank" rel="noopener noreferrer"
+                          className="text-primary hover:underline text-sm">
+                          {s.url}
+                        </a>
+                      ) : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(s.created_at).toLocaleDateString("id-ID")}
                     </TableCell>
                   </TableRow>
                 ))

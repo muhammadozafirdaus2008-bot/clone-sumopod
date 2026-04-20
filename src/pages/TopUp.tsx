@@ -18,6 +18,7 @@ const TopUp = () => {
   const [processing, setProcessing] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
 
+  // ✅ PERBAIKAN: Fungsi handleTopUp lengkap
   const handleTopUp = async (amount: number, idx: number) => {
     if (!user) {
       toast({
@@ -30,42 +31,59 @@ const TopUp = () => {
     setProcessing(idx);
 
     try {
-    const res = await fetch("https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    user_id: user.id,
-    amount: amount
-  })
-});
+      const res = await fetch(
+        "https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            amount: amount,
+            currency: "IDR",
+            payment_method: "QRIS",
+          }),
+        }
+      );
 
-const data = await res.json();
+      const text = await res.text();
+      console.log("RAW RESPONSE:", text);
 
-// 🔥 INI YANG BIKIN PINDAH KE QRIS
-window.location.href = data.invoice_url;
+      let data: any;
 
-      toast({
-        title: "Top up request sent!",
-        description: "Waiting for payment confirmation...",
-      });
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Response bukan JSON");
+      }
 
-    } catch (err) {
+      if (!data?.invoice_url) {
+        throw new Error("Invoice URL tidak ditemukan");
+      }
+
+      console.log("Redirecting to:", data.invoice_url);
+      window.location.href = data.invoice_url;
+
+    } catch (err: any) {
+      console.error(err);
+
       toast({
         title: "Error",
-        description: "Failed to top up",
+        description: err.message || "Failed to top up",
       });
+    } finally {
+      setProcessing(null);
     }
-
-    setProcessing(null);
-  };
+  }; // ✅ DITUTUP DI SINI
 
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground">Top Up Credits</h1>
-        <p className="mt-1 text-muted-foreground">Add credits to your account to purchase services.</p>
+        <p className="mt-1 text-muted-foreground">
+          Add credits to your account to purchase services.
+        </p>
       </div>
 
       <Card className="mb-6">
@@ -76,7 +94,10 @@ window.location.href = data.invoice_url;
           <div>
             <p className="text-sm text-muted-foreground">Current balance</p>
             <p className="text-3xl font-bold text-foreground">
-              {credits} <span className="text-base font-normal text-muted-foreground">credits</span>
+              {credits}{" "}
+              <span className="text-base font-normal text-muted-foreground">
+                credits
+              </span>
             </p>
           </div>
         </CardContent>
@@ -86,7 +107,9 @@ window.location.href = data.invoice_url;
         {packages.map((pkg, idx) => (
           <Card
             key={idx}
-            className={`cursor-pointer transition-all hover:shadow-md ${selected === idx ? "ring-2 ring-primary" : ""}`}
+            className={`cursor-pointer transition-all hover:shadow-md ${
+              selected === idx ? "ring-2 ring-primary" : ""
+            }`}
             onClick={() => setSelected(idx)}
           >
             <CardHeader className="pb-2">
@@ -106,7 +129,10 @@ window.location.href = data.invoice_url;
               <Button
                 className="w-full"
                 disabled={processing !== null}
-                onClick={(e) => { e.stopPropagation(); handleTopUp(pkg.amount, idx); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTopUp(pkg.amount, idx);
+                }}
               >
                 {processing === idx ? (
                   <span className="flex items-center gap-2">

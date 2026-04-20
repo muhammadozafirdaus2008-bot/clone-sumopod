@@ -12,34 +12,19 @@ import AddService from "@/pages/AddService";
 import Billing from "./pages/billing";
 import NotFound from "@/pages/NotFound";
 import PlaceholderPage from "@/components/PlaceholderPage";
+import InstancesPage from "@/pages/InstancesPage";
+import InstanceDetailPage from "@/pages/InstanceDetailPage";
+import DeployN8NPage from "@/pages/DeployN8NPage";
 import {
   GraduationCap, Users2, MessageSquare, Bot, Wallet,
   Monitor, Database, Globe, Mail, Users, Settings, HelpCircle,
 } from "lucide-react";
 
-import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabase'
 import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
 export default function App() {
-
-  // ✅ PINDAH KE DALAM KOMPONEN
-  const [todos, setTodos] = useState([])
-
-  useEffect(() => {
-    async function getTodos() {
-      const { data } = await supabase.from('todos').select()
-
-      if (data) {
-        setTodos(data)
-      }
-    }
-
-    getTodos()
-  }, [])
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -61,6 +46,11 @@ export default function App() {
 
                 <Route path="/services" element={<Services />} />
                 <Route path="/services/add" element={<AddService />} />
+
+                {/* ✅ N8N Instances Routes */}
+                <Route path="/instances" element={<InstancesPage />} />
+                <Route path="/instances/:id" element={<InstanceDetailPage />} />
+                <Route path="/deploy" element={<DeployN8NPage />} />
 
                 <Route path="/wallet" element={<PlaceholderPage title="Wallet" subtitle="Manage wallet" icon={<Wallet className="h-8 w-8" />} />} />
 

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
- 
+
 interface Transaction {
   id: string;
   user_id: string;
@@ -25,7 +25,7 @@ interface Transaction {
   status: string;
   created_at?: string;
 }
- 
+
 interface Payment {
   id: string;
   user_id: string;
@@ -36,18 +36,18 @@ interface Payment {
   invoice_url?: string;
   created_at?: string;
 }
- 
+
 const QUICK_AMOUNTS = [50_000, 100_000, 200_000];
- 
+
 const formatDate = (dateStr?: string) => {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return "-";
   return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 };
- 
+
 const formatNumber = (n: number) => n.toLocaleString("id-ID");
- 
+
 const Billing = () => {
   const { credits, session } = useAuth();
   const { toast } = useToast();
@@ -56,7 +56,8 @@ const Billing = () => {
   const [topupAmount, setTopupAmount] = useState("0");
   const [processing, setProcessing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
- 
+  const [paymentMethod, setPaymentMethod] = useState("QRIS");
+
   useEffect(() => {
     if (!session?.user) return;
     supabase
@@ -69,7 +70,7 @@ const Billing = () => {
         if (data) setTransactions(data as Transaction[]);
       });
   }, [session?.user, credits]);
- 
+
   useEffect(() => {
     if (!session?.user) return;
     supabase
@@ -82,52 +83,67 @@ const Billing = () => {
         if (data) setPayments(data as Payment[]);
       });
   }, [session?.user, credits]);
- 
+
+  // ✅ PERBAIKAN: Fungsi handleTopup yang benar (hanya 1 try-catch)
   const handleTopup = async () => {
     const amount = parseInt(topupAmount);
+
     if (!amount || amount <= 0) {
       toast({ title: "Masukkan jumlah yang valid", variant: "destructive" });
       return;
     }
-    if (!session?.access_token) {
-      toast({ title: "Silakan login terlebih dahulu", variant: "destructive" });
+
+    if (!session?.user?.id) {
+      toast({ title: "Login dulu", variant: "destructive" });
       return;
     }
+
     setProcessing(true);
+
     try {
-      const { data: { session: freshSession } } = await supabase.auth.getSession();
-      if (!freshSession?.access_token) throw new Error("Session expired, silakan login ulang");
- 
       const res = await fetch(
         "https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${freshSession.access_token}`,
           },
-          body: JSON.stringify({ amount, user_id: freshSession.user.id }),
+          body: JSON.stringify({
+            user_id: session.user.id,
+            amount: amount,
+            currency: "IDR",
+            payment_method: paymentMethod,
+          }),
         }
       );
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      const data = await res.json();
-      if (data.invoice_url) {
-        setDialogOpen(false);
-        window.location.href = data.invoice_url;
-      } else {
-        throw new Error("No invoice URL returned");
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
+
+      const data = await res.json();
+
+      console.log("RESPONSE N8N:", data);
+
+      if (!data?.invoice_url) {
+        throw new Error("Invoice URL tidak ditemukan");
+      }
+
+      // ✅ Redirect ke Xendit payment
+      window.location.href = data.invoice_url;
+
     } catch (err: any) {
+      console.error("Top up error:", err);
       toast({
         title: "Top up gagal",
-        description: err.message || "Terjadi kesalahan",
+        description: err.message,
         variant: "destructive",
       });
     } finally {
       setProcessing(false);
     }
-  };
- 
+  }; // ✅ Tutup fungsi di sini
+
   const getStatusBadge = (status: string) => {
     const map: Record<string, string> = {
       success: "bg-emerald-100 text-emerald-700 border border-emerald-200",
@@ -137,7 +153,7 @@ const Billing = () => {
     };
     return map[status?.toLowerCase()] ?? "bg-gray-100 text-gray-700 border border-gray-200";
   };
- 
+
   const getStatusLabel = (status: string) => {
     const s = status?.toLowerCase();
     if (s === "pending") return (
@@ -152,7 +168,7 @@ const Billing = () => {
     );
     return status;
   };
- 
+
   return (
     <div>
       {/* Header */}
@@ -172,7 +188,7 @@ const Billing = () => {
           </Button>
         </div>
       </div>
- 
+
       {/* Top Up Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -212,7 +228,7 @@ const Billing = () => {
             </div>
             <div className="space-y-2">
               <Label>Payment Method</Label>
-              <Select defaultValue="QRIS">
+              <Select defaultValue="QRIS" onValueChange={setPaymentMethod}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="QRIS">QRIS</SelectItem>
@@ -238,11 +254,10 @@ const Billing = () => {
           </div>
         </DialogContent>
       </Dialog>
- 
+
       {/* Current Credits + Warning dalam 1 Card */}
       <Card className="mb-6">
         <CardContent className="p-0">
-          {/* Current Credits */}
           <div className="flex items-center gap-4 px-5 py-5">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
               <CreditCard className="h-6 w-6 text-blue-500" />
@@ -252,8 +267,7 @@ const Billing = () => {
               <p className="text-3xl font-bold text-foreground">{formatNumber(credits)}</p>
             </div>
           </div>
- 
-          {/* Warning */}
+
           <div className="flex items-center gap-3 border-t border-amber-200 bg-amber-50 px-4 py-3 rounded-b-lg">
             <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
             <p className="text-sm text-amber-800">
@@ -263,7 +277,7 @@ const Billing = () => {
           </div>
         </CardContent>
       </Card>
- 
+
       {/* Tabs Card */}
       <Card>
         <CardContent className="p-0">
@@ -286,7 +300,7 @@ const Billing = () => {
                 </TabsTrigger>
               </TabsList>
             </div>
- 
+
             {/* Transactions Tab */}
             <TabsContent value="transactions" className="mt-0">
               <Table>
@@ -331,7 +345,7 @@ const Billing = () => {
                 </TableBody>
               </Table>
             </TabsContent>
- 
+
             {/* Payments Tab */}
             <TabsContent value="payments" className="mt-0">
               <Table>
@@ -392,26 +406,5 @@ const Billing = () => {
     </div>
   );
 };
- 
+
 export default Billing;
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

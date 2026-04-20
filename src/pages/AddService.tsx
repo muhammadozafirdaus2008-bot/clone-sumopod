@@ -4,9 +4,16 @@ import { useAuth } from "@/components/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Cloud, Search, X } from "lucide-react";
+import { ArrowLeft, Cloud, Search } from "lucide-react";
 import { toast } from "sonner";
+import { deployN8nService, DEPLOY_SERVICE_WEBHOOK } from "@/lib/n8n-client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";  
 
 interface ServiceTemplate {
   id: string;
@@ -14,26 +21,36 @@ interface ServiceTemplate {
   description: string;
   price: string;
   cost: number;
+  template: string;
 }
 
 const serviceTemplates: ServiceTemplate[] = [
-  { id: "activepieces", name: "Activepieces", description: "Automation Alternative to Zapier, easier than n8n", price: "Starts from Rp 60.000/month", cost: 60000 },
-  { id: "go-whatsapp", name: "Go WhatsApp by Aldinokemal", description: "Simple, Light, Easy WhatsApp Unofficial API", price: "Starts from Rp 15.000/month", cost: 15000 },
-  { id: "n8n", name: "n8n", description: "Automation using n8n", price: "Starts from Rp 15.000/month", cost: 15000 },
-  { id: "n8n-ffmpeg", name: "n8n (ffmpeg included)", description: "n8n with ffmpeg installed", price: "Starts from Rp 15.000/month", cost: 15000 },
-  { id: "waha-gows", name: "WAHA Plus Cloud - GOWS", description: "WhatsApp API Unofficial with WAHA Plus GOWS Engine", price: "Starts from Rp 15.000/month", cost: 15000 },
-  { id: "waha-noweb", name: "WAHA Plus Cloud - NOWEB", description: "WhatsApp API Unofficial with WAHA Plus NOWEB Engine", price: "Starts from Rp 15.000/month", cost: 15000 },
-  { id: "evolution-api", name: "Evolution API", description: "Multi-device WhatsApp API with webhook support", price: "Starts from Rp 20.000/month", cost: 20000 },
-  { id: "typebot", name: "Typebot", description: "Open-source chatbot builder alternative to Landbot", price: "Starts from Rp 25.000/month", cost: 25000 },
-  { id: "chatwoot", name: "Chatwoot", description: "Open-source customer engagement platform", price: "Starts from Rp 30.000/month", cost: 30000 },
+  {
+    id: "n8n-basic",
+    name: "n8n",
+    description: "Automation using n8n",
+    price: "Starts from Rp 15.000/month",
+    cost: 15000,
+    template: "n8n-basic",
+  },
+  {
+    id: "n8n-plus",
+    name: "n8n Plus",
+    description: "n8n with more resources",
+    price: "Starts from Rp 30.000/month",
+    cost: 30000,
+    template: "n8n-plus",
+  },
 ];
 
 const AddService = () => {
   const navigate = useNavigate();
-  const { user, refreshCredits } = useAuth();
+  const { user, session, credits } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<ServiceTemplate | null>(null);
   const [serviceName, setServiceName] = useState("");
+  const [showAgreement, setShowAgreement] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [deploying, setDeploying] = useState(false);
 
   const filtered = serviceTemplates.filter(
@@ -42,30 +59,79 @@ const AddService = () => {
       s.description.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleSelectTemplate = (template: ServiceTemplate) => {
+    setSelectedTemplate(template);
+    setServiceName("");
+    setAgreedToTerms(false);
+  };
+
+  const handleProceedToDeploy = () => {
+    if (!serviceName.trim()) {
+      toast.error("Masukkan nama service dulu!");
+      return;
+    }
+
+    if (!selectedTemplate) {
+      toast.error("Pilih template dulu!");
+      return;
+    }
+
+    // Check credits
+    if (credits < selectedTemplate.cost) {
+      toast.error(
+        `Kredit tidak cukup! Anda butuh Rp ${selectedTemplate.cost}, tapi hanya punya Rp ${credits}`
+      );
+      return;
+    }
+
+    // Show agreement modal
+    setShowAgreement(true);
+  };
+
   const handleDeploy = async () => {
-  if (!selectedTemplate || !user) return;
+    if (!selectedTemplate || !user || !session?.access_token) {
+      toast.error("Data tidak lengkap");
+      return;
+    }
 
-  setDeploying(true);
+    if (!agreedToTerms) {
+      toast.error("Anda harus setuju dengan Terms of Service");
+      return;
+    }
 
-  try {
-    const { data, error } = await supabase.rpc("deploy_service", {
-      p_user_id: user.id,
-      p_service_name: serviceName,
-      p_package: selectedTemplate.id,
-      p_cost: selectedTemplate.cost,
-    });
+    setDeploying(true);
 
-    if (error) throw error;
+    try {
+      const response = await deployN8nService(
+        serviceName.trim(),
+        selectedTemplate.template,
+        selectedTemplate.cost,
+        session.access_token
+      );
 
-    toast.success("Deploy sedang diproses...");
-    navigate("/services");
+      if (response.success) {
+        toast.success("🚀 Deploy berhasil! Service sedang di-setup...");
+        
+        // Reset form
+        setSelectedTemplate(null);
+        setServiceName("");
+        setShowAgreement(false);
+        setAgreedToTerms(false);
 
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setDeploying(false);
-  }
-};
+        // Redirect ke instances dalam 2 detik
+        setTimeout(() => {
+          navigate("/instances");
+        }, 2000);
+      } else {
+        toast.error(response.message || "Deploy gagal");
+      }
+    } catch (err: any) {
+      console.error("Deploy error:", err);
+      toast.error(err.message || "Tidak bisa connect ke server");
+    } finally {
+      setDeploying(false);
+    }
+  };
 
   return (
     <div>
@@ -77,7 +143,7 @@ const AddService = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-2xl font-bold text-foreground">Add Service</h1>
+        <h1 className="text-2xl font-bold text-foreground">Deploy Service</h1>
         <p className="text-sm text-muted-foreground">
           Choose a service template to add to your account
         </p>
@@ -87,34 +153,29 @@ const AddService = () => {
       <div className="relative mb-6 max-w-lg">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search service categories..."
+          placeholder="Search services..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
         />
       </div>
 
-      {/* Grid */}
+      {/* Service Templates */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((template) => (
-          <Card key={template.id} className="flex flex-col justify-between">
+          <Card key={template.id}>
             <CardContent className="flex flex-col gap-3 p-5">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
                 <Cloud className="h-6 w-6 text-primary" />
               </div>
-              <div>
-                <h3 className="text-base font-semibold text-foreground">{template.name}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{template.description}</p>
-              </div>
-              <p className="text-sm text-muted-foreground">{template.price}</p>
+              <h3 className="font-semibold">{template.name}</h3>
+              <p className="text-sm text-muted-foreground">{template.description}</p>
+              <p className="text-sm font-medium text-foreground">{template.price}</p>
+
               <Button
-                className="mt-auto w-full gap-2"
-                onClick={() => {
-                  setSelectedTemplate(template);
-                  setServiceName("");
-                }}
+                onClick={() => handleSelectTemplate(template)}
+                className="w-full"
               >
-                <Cloud className="h-4 w-4" />
                 Deploy
               </Button>
             </CardContent>
@@ -122,69 +183,122 @@ const AddService = () => {
         ))}
       </div>
 
-      {filtered.length === 0 && (
-        <div className="py-16 text-center text-muted-foreground">
-          No services found matching "{search}"
+      {/* Service Name Modal */}
+      {selectedTemplate && !showAgreement && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-background p-6 rounded-lg w-full max-w-md">
+            <h2 className="mb-4 font-semibold text-lg">
+              Deploy {selectedTemplate.name}
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Service Name</label>
+                <Input
+                  placeholder="my-automation"
+                  value={serviceName}
+                  onChange={(e) => setServiceName(e.target.value)}
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Huruf kecil, angka, dan tanda hubung saja
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+                <p className="text-sm font-medium text-blue-900">Summary</p>
+                <div className="mt-2 space-y-1 text-sm text-blue-800">
+                  <div className="flex justify-between">
+                    <span>Service:</span>
+                    <span className="font-semibold">{selectedTemplate.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Harga:</span>
+                    <span className="font-semibold">Rp {selectedTemplate.cost.toLocaleString("id-ID")}/bulan</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedTemplate(null);
+                    setServiceName("");
+                  }}
+                  disabled={deploying}
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleProceedToDeploy}
+                  disabled={deploying || !serviceName.trim()}
+                  className="flex-1"
+                >
+                  Lanjut
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Dialog */}
-      {selectedTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
-            
-            {/* Dialog Header */}
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Deploy {selectedTemplate.name}</h2>
-              <button
-                onClick={() => setSelectedTemplate(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      {/* Deployment Agreement Modal */}
+      {showAgreement && selectedTemplate && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-background p-6 rounded-lg w-full max-w-md max-h-96 overflow-y-auto">
+            <h2 className="mb-4 font-bold text-lg flex items-center gap-2">
+              ⚠️ Deployment Agreement
+            </h2>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm text-yellow-900">
+                <p className="font-semibold mb-2">Pembayaran akan diproses</p>
+                <p>
+                  Anda akan dikenakan <strong>Rp {selectedTemplate.cost.toLocaleString("id-ID")}</strong> dari akun Anda.
+                </p>
+              </div>
+
+              <div className="border-l-4 border-amber-500 bg-amber-50 p-4 text-sm">
+                <p className="font-semibold text-amber-900 mb-2">Terms of Service</p>
+                <p className="text-amber-800">
+                  By deploying this service, you agree that you will not use this service for any illegal
+                  activities. If illegal activities are detected, your service will be terminated automatically
+                  without prior notice.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 border rounded">
+                <Checkbox
+                  id="agree"
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                />
+                <label htmlFor="agree" className="text-sm cursor-pointer">
+                  I agree with the Terms of Service and understand that credits will be deducted
+                </label>
+              </div>
             </div>
 
-            {/* Input Nama Service */}
-            <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-foreground">
-                Nama Service
-              </label>
-              <Input
-                placeholder="contoh: n8n-toko-saya"
-                value={serviceName}
-                onChange={(e) => setServiceName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleDeploy()}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Gunakan huruf kecil, angka, dan tanda hubung saja
-              </p>
-            </div>
-
-            {/* Info Harga */}
-            <div className="mb-5 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              Biaya: <span className="font-semibold text-foreground">{selectedTemplate.price}</span>
-            </div>
-
-            {/* Tombol */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="flex-1"
-                onClick={() => setSelectedTemplate(null)}
+                onClick={() => {
+                  setShowAgreement(false);
+                  setAgreedToTerms(false);
+                }}
                 disabled={deploying}
               >
                 Batal
               </Button>
               <Button
-                className="flex-1 gap-2"
                 onClick={handleDeploy}
-                disabled={deploying}
+                disabled={deploying || !agreedToTerms}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                <Cloud className="h-4 w-4" />
-                {deploying ? "Deploying..." : "Deploy Sekarang"}
+                {deploying ? "Deploying..." : "I Agree, Deploy"}
               </Button>
             </div>
-
           </div>
         </div>
       )}
