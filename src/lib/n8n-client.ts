@@ -1,14 +1,26 @@
-const N8N_WEBHOOK_URL = "https://n8n.ghozali.biz.id/webhook/deploy-service";
-
-export function deployN8nService(serviceName: string) {
-  fetch(N8N_WEBHOOK_URL, {
+export async function deployN8nService(
+  serviceName: string,
+  template: string,
+  cost: number,
+  token: string
+) {
+  const res = await fetch("https://n8n.ghozali.biz.id/webhook/Deploy-Service", {
     method: "POST",
-    mode: "no-cors",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      serviceName,
+      name: serviceName,   // sesuai body request
+      template,
+      cost,
     }),
   });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "Unknown error");
+    throw new Error(`Deploy gagal (${res.status}): ${errText}`);
+  }
+
+  return true;
 }

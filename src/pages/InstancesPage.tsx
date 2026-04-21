@@ -78,12 +78,12 @@ export default function DeployN8NPage() {
     setLoading(true);
 
     try {
-      await deployN8nService(serviceName.trim());(
-        serviceName.trim(),
-        selectedTemplate.id,
-        selectedTemplate.cost,
-        session.access_token
-      );
+      await deployN8nService(
+  serviceName.trim(),
+  selectedTemplate.id,
+  selectedTemplate.cost,
+  session.access_token
+);
 
       toast({
         title: "Deploy Berhasil! 🚀",
