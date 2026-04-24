@@ -31,20 +31,16 @@ const Landing = () => {
     if (isAnimating.current) return;
     next = Math.max(0, Math.min(next, SECTIONS.length - 1));
     if (next === currentRef.current) return;
-
     isAnimating.current = true;
     SectionVisibilityContext.set(currentRef.current, false);
-
     setTimeout(() => {
       currentRef.current = next;
       setCurrent(next);
       setTimeout(() => SectionVisibilityContext.set(next, true), 50);
     }, 300);
-
     setTimeout(() => { isAnimating.current = false; }, 900);
   }, []);
 
-  // Wheel — akumulasi threshold supaya touchpad tidak skip
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -61,7 +57,6 @@ const Landing = () => {
     return () => window.removeEventListener('wheel', onWheel);
   }, [goTo]);
 
-  // Touch swipe
   useEffect(() => {
     const onTouchStart = (e: TouchEvent) => { touchStartY.current = e.touches[0].clientY; };
     const onTouchEnd = (e: TouchEvent) => {
@@ -77,7 +72,6 @@ const Landing = () => {
     };
   }, [goTo]);
 
-  // Keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'PageDown') goTo(currentRef.current + 1);
@@ -87,7 +81,6 @@ const Landing = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [goTo]);
 
-  // Fade-in section pertama saat mount
   useEffect(() => {
     setTimeout(() => SectionVisibilityContext.set(0, true), 100);
   }, []);
@@ -99,12 +92,7 @@ const Landing = () => {
       {/* Dot navigator */}
       <div className="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
         {SECTIONS.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className="group flex items-center justify-end"
-            aria-label={`Section ${i + 1}`}
-          >
+          <button key={i} onClick={() => goTo(i)} className="group flex items-center justify-end" aria-label={`Section ${i + 1}`}>
             <span className={`block rounded-full transition-all duration-300 ${
               i === current
                 ? 'w-2.5 h-2.5 bg-blue-600 shadow-sm shadow-blue-300'
@@ -134,14 +122,14 @@ const Landing = () => {
           <Features />
         </SectionWrapper>
 
-        {/* 3 — CTA + Footer digabung */}
+        {/* 3 — CTA + Footer dalam 1 section */}
         <SectionWrapper index={3}>
-          <div className="flex flex-col min-h-screen">
-            {/* CTA di tengah, ambil sisa ruang */}
-            <div className="flex-1 flex items-center">
+          <div className="w-full h-full flex flex-col">
+            {/* CTA: ambil sisa ruang, konten di tengah */}
+            <div className="flex-1 flex items-center justify-center bg-white">
               <CTA />
             </div>
-            {/* Footer di bawah */}
+            {/* Footer: tinggi fixed di bawah */}
             <Footer />
           </div>
         </SectionWrapper>
@@ -167,7 +155,9 @@ function SectionWrapper({
 
   return (
     <div
-      className={`w-full h-screen overflow-y-auto transition-all duration-500 ease-out ${center ? 'flex items-center justify-center' : ''}`}
+      className={`w-full h-screen overflow-hidden transition-all duration-500 ease-out ${
+        center ? 'flex items-center justify-center' : ''
+      }`}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(20px)',
