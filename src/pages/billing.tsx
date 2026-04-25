@@ -235,6 +235,7 @@ const ReceiptModal = ({ open, onOpenChange, transaction, payment }: ReceiptModal
 // ── Main Component ───────────────────────────────────────────────────────────
 const Billing = () => {
   const { credits, session } = useAuth();
+  const [realBalance, setRealBalance] = useState(0);
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -281,6 +282,29 @@ const Billing = () => {
         if (data) setPayments(data as Payment[]);
       });
   }, [session?.user, credits]);
+
+  useEffect(() => {
+  if (!session?.user) return;
+
+  const fetchBalance = async () => {
+    const { data, error } = await supabase
+      .from("Balances")
+      .select("balance")
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (error) {
+      console.error("Error ambil balance:", error);
+      return;
+    }
+
+    if (data) {
+      setRealBalance(data.balance);
+    }
+  };
+
+  fetchBalance();
+}, [session?.user]);
 
   const handleTopup = async () => {
     const amount = parseInt(topupAmount);
@@ -460,7 +484,7 @@ const Billing = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Current Credits</p>
                 <p className="text-3xl font-bold text-foreground">
-                  <AnimatedNumber value={credits} />
+                  <AnimatedNumber value={realBalance} />
                 </p>
               </div>
             </div>
