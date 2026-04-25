@@ -1,9 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Box, Eye, EyeOff } from "lucide-react";
+
+const TESTIMONIALS = [
+  {
+    name: "Asep",
+    role: "Developer",
+    quote: "SumoPod makes deploying automation tools as easy as clicking a button. We went from hours of setup to live in under a minute.",
+  },
+  {
+    name: "Alessandro Fabian",
+    role: "Software Engineer",
+    quote: "Dengan SumoPod, saya bisa deploy aplikasi dalam hitungan detik. Tidak perlu lagi khawatir soal konfigurasi server yang rumit.",
+  },
+  {
+    name: "Dario Cipriano",
+    role: "DevOps Engineer",
+    quote: "Platform terbaik untuk deployment container. Simple, cepat, dan reliable. SumoPod benar-benar mengubah cara saya bekerja.",
+  },
+  {
+    name: "Ucok Markocop",
+    role: "Full Stack Developer",
+    quote: "SumoPod itu gampang banget dipakenya. Dari yang tadinya bingung deploy, sekarang bisa sambil ngopi pun beres.",
+  },
+  {
+    name: "Muhammad Ghozali Firdaus",
+    role: "Founder, SumoPod",
+    quote: "Saya membangun SumoPod karena ingin semua orang bisa menikmati teknologi automation tanpa hambatan teknis.",
+  },
+  {
+    name: "Cristiano Ronaldo",
+    role: "Pesepak Bola Profesional",
+    quote: "\"Siuuu!\" — Bahkan saya pun kagum. SumoPod se-efisien tendangan bebas saya. Deploy dalam detik, tanpa kompromi.",
+  },
+  {
+    name: "Luka Dončić",
+    role: "Pesepak Bola Profesional",
+    quote: "\"Wow, unbelievable!\" — SumoPod adalah assist terbaik yang pernah saya terima. Dari setup ke live, secepat fast break saya.",
+  },
+  {
+    name: "Mario Mandžukić",
+    role: "Pesepak Bola Profesional",
+    quote: "Di lapangan maupun di cloud, saya selalu all-in. SumoPod memberi saya kepercayaan diri yang sama seperti saat mencetak gol di final.",
+  },
+  {
+    name: "Christopher Nkunku",
+    role: "Pesepak Bola Profesional",
+    quote: "Kecepatan dan presisi — itulah gaya bermain saya, dan itulah yang SumoPod berikan. Deploy kilat, zero error.",
+  },
+  {
+    name: "Dennis Ritchie",
+    role: "Pionir Bahasa C & Unix",
+    quote: "If I were alive today, I'd use SumoPod. Simplicity is the soul of great software — and this platform embodies that perfectly.",
+  },
+  {
+    name: "Anders Hejlsberg",
+    role: "Creator of C# & TypeScript",
+    quote: "Type safety in code, reliability in deployment. SumoPod brings the same rigor to infrastructure that TypeScript brings to development.",
+  },
+  {
+    name: "Charles Babbage",
+    role: "Bapak Komputer Modern",
+    quote: "Had I imagined a machine this capable, I would have dreamed bigger. SumoPod turns complex computations into child's play.",
+  },
+  {
+    name: "Ada Lovelace",
+    role: "Programmer Pertama di Dunia",
+    quote: "The engine I envisioned could compute anything — SumoPod proves that vision. Automation made elegant, powerful, and accessible.",
+  },
+  {
+    name: "Alan Turing",
+    role: "Bapak Ilmu Komputer",
+    quote: "Can machines deploy themselves? With SumoPod, the answer is nearly yes. A testament to what intelligence — artificial or otherwise — can achieve.",
+  },
+];
 
 const Login = () => {
   const { user, loading } = useAuth();
@@ -13,8 +86,27 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "facebook" | null>(null);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [fade, setFade] = useState(true);
 
+  // ✅ useEffect HARUS di sini, SEBELUM conditional return
+  // Rotate testimonial setiap 10 detik dengan fade transition
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length);
+        setFade(true);
+      }, 400);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ✅ Conditional return SETELAH semua hooks
   if (!loading && user) return <Navigate to="/services" replace />;
+
+  const t = TESTIMONIALS[testimonialIndex];
+  const initials = t.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +127,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Left panel — branding */}
+      {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-gray-900 flex-col justify-between p-12">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -46,24 +138,42 @@ const Login = () => {
           </span>
         </div>
 
-        <div>
+        {/* Rotating testimonial */}
+        <div
+          className="transition-all duration-400 ease-in-out"
+          style={{ opacity: fade ? 1 : 0, transform: fade ? "translateY(0)" : "translateY(8px)" }}
+        >
           <blockquote className="text-gray-300 text-lg leading-relaxed mb-6">
-            "SumoPod makes deploying automation tools as easy as clicking a button. 
-            We went from hours of setup to live in under a minute."
+            "{t.quote}"
           </blockquote>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold">A</div>
-            <div>
-              <p className="text-white text-sm font-medium">Ahmad Fauzi</p>
-              <p className="text-gray-500 text-xs">Developer at TechCorp</p>
+            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold shrink-0">
+              {initials}
             </div>
+            <div>
+              <p className="text-white text-sm font-medium">{t.name}</p>
+              <p className="text-gray-500 text-xs">{t.role}</p>
+            </div>
+          </div>
+
+          {/* Dot indicators */}
+          <div className="flex gap-1.5 mt-6">
+            {TESTIMONIALS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => { setFade(false); setTimeout(() => { setTestimonialIndex(i); setFade(true); }, 400); }}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === testimonialIndex ? "w-6 bg-blue-500" : "w-1.5 bg-gray-700"
+                }`}
+              />
+            ))}
           </div>
         </div>
 
         <p className="text-gray-600 text-xs">&copy; {new Date().getFullYear()} SumoPod. All rights reserved.</p>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right panel */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
@@ -77,9 +187,8 @@ const Login = () => {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
           <p className="text-sm text-gray-500 mb-8">Sign in to your account to continue</p>
 
-          {/* OAuth buttons */}
+          {/* OAuth */}
           <div className="space-y-3 mb-6">
-            {/* Google */}
             <button
               onClick={() => handleOAuth("google")}
               disabled={!!oauthLoading}
@@ -98,7 +207,6 @@ const Login = () => {
               Continue with Google
             </button>
 
-            {/* Facebook */}
             <button
               onClick={() => handleOAuth("facebook")}
               disabled={!!oauthLoading}
@@ -125,7 +233,7 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Email form */}
+          {/* Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
@@ -138,7 +246,6 @@ const Login = () => {
                 className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
             </div>
-
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-medium text-gray-700">Password</label>
@@ -153,21 +260,14 @@ const Login = () => {
                   required
                   className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
+                <button type="button" onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 mt-2"
-            >
+            <button type="submit" disabled={submitting}
+              className="w-full py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 mt-2">
               {submitting ? "Signing in..." : "Sign in"}
             </button>
           </form>
@@ -176,8 +276,7 @@ const Login = () => {
             Don't have an account?{" "}
             <Link to="/register" className="text-blue-600 font-medium hover:underline">Sign up</Link>
           </p>
-
-          <p className="mt-6 text-center text-xs text-gray-400 leading-relaxed">
+          <p className="mt-4 text-center text-xs text-gray-400 leading-relaxed">
             By continuing, you agree to SumoPod's{" "}
             <a href="#" className="underline">Terms of Service</a> and{" "}
             <a href="#" className="underline">Privacy Policy</a>.

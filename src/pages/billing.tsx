@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, QrCode, Receipt, CreditCard, AlertTriangle, Info } from "lucide-react";
+import { Plus, QrCode, Receipt, CreditCard, AlertTriangle, Info, X, Download } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -109,6 +109,129 @@ function AnimatedNumber({ value }: { value: number }) {
   return <>{formatNumber(display)}</>;
 }
 
+// ── Receipt Modal Component ────────────────────────────────────────────────
+interface ReceiptModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  transaction?: Transaction;
+  payment?: Payment;
+}
+
+const ReceiptModal = ({ open, onOpenChange, transaction, payment }: ReceiptModalProps) => {
+  const item = transaction || payment;
+  if (!item) return null;
+
+  const isTransaction = !!transaction;
+  const date = new Date(item.created_at || "");
+  const dateStr = date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const timeStr = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="flex items-center justify-between flex-row">
+          <DialogTitle>Receipt</DialogTitle>
+          <button onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Receipt Header */}
+          <div className="border-b pb-4 text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 mb-3">
+              <Receipt className="h-6 w-6 text-blue-500" />
+            </div>
+            <h3 className="font-semibold text-lg">Receipt</h3>
+            <p className="text-sm text-muted-foreground">{item.id}</p>
+          </div>
+
+          {/* Details */}
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Date</span>
+              <span className="font-medium">{dateStr}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Time</span>
+              <span className="font-medium">{timeStr}</span>
+            </div>
+
+            {isTransaction ? (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Description</span>
+                  <span className="font-medium">{transaction.description || "-"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type</span>
+                  <span className={`font-medium ${transaction.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
+                    {transaction.type}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t pt-3">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className={`font-bold text-lg ${transaction.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
+                    {transaction.type === "Purchase" ? "+" : "-"}{formatNumber(transaction.amount)} credits
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Currency</span>
+                  <span className="font-medium">{payment.currency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className={`font-medium ${payment.status?.toLowerCase() === "success" || payment.status?.toLowerCase() === "completed" ? "text-emerald-600" : "text-yellow-600"}`}>
+                    {payment.status}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t pt-3">
+                  <span className="text-muted-foreground">Amount Paid</span>
+                  <span className="font-bold text-lg">{formatNumber(payment.amount)} {payment.currency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Credits Received</span>
+                  <span className="font-bold text-lg text-green-600">+{formatNumber(payment.credits || 0)} credits</span>
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Status</span>
+              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                item.status?.toLowerCase() === "success" || item.status?.toLowerCase() === "completed"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-yellow-100 text-yellow-700"
+              }`}>
+                {item.status?.toLowerCase() === "success" || item.status?.toLowerCase() === "completed" ? "✓ Completed" : "⏱ Pending"}
+              </span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="border-t pt-4 text-center text-xs text-muted-foreground">
+            <p>Thank you for using SumoPod!</p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+            <Button className="flex-1 gap-2">
+              <Download className="h-4 w-4" />
+              Download PDF
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // ── Main Component ───────────────────────────────────────────────────────────
 const Billing = () => {
   const { credits, session } = useAuth();
@@ -119,6 +242,8 @@ const Billing = () => {
   const [processing, setProcessing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
+  const [receiptOpen, setReceiptOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<{ type: "transaction" | "payment"; data: Transaction | Payment } | null>(null);
 
   // Fade-in on mount
   const [mounted, setMounted] = useState(false);
@@ -209,6 +334,11 @@ const Billing = () => {
     if (s === "pending") return <span className="inline-flex items-center gap-1"><span className="text-yellow-500">⏱</span> Pending</span>;
     if (s === "completed" || s === "success") return <span className="inline-flex items-center gap-1"><span className="text-emerald-500">✓</span> Completed</span>;
     return status;
+  };
+
+  const handleReceiptClick = (type: "transaction" | "payment", data: Transaction | Payment) => {
+    setSelectedReceipt({ type, data });
+    setReceiptOpen(true);
   };
 
   return (
@@ -310,6 +440,16 @@ const Billing = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Receipt Modal */}
+        {selectedReceipt && (
+          <ReceiptModal
+            open={receiptOpen}
+            onOpenChange={setReceiptOpen}
+            transaction={selectedReceipt.type === "transaction" ? (selectedReceipt.data as Transaction) : undefined}
+            payment={selectedReceipt.type === "payment" ? (selectedReceipt.data as Payment) : undefined}
+          />
+        )}
+
         {/* Credits Card — angka counter animasi */}
         <Card className="mb-6">
           <CardContent className="p-0">
@@ -361,11 +501,11 @@ const Billing = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-64">DATE</TableHead>
+                      <TableHead className="w-32">DATE</TableHead>
                       <TableHead className="w-64">DESCRIPTION</TableHead>
-                      <TableHead className="w-27">TYPE</TableHead>
-                      <TableHead className="w-50">AMOUNT</TableHead>
-                      <TableHead className="w-20">ACTIONS</TableHead>
+                      <TableHead className="w-32">TYPE</TableHead>
+                      <TableHead className="w-40">AMOUNT</TableHead>
+                      <TableHead className="w-24">ACTIONS</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -379,7 +519,7 @@ const Billing = () => {
                       transactions.map((t) => (
                         <TableRow key={t.id}>
                           <TableCell className="text-muted-foreground">{formatDate(t.created_at)}</TableCell>
-                          <TableCell>{t.description || "-"}</TableCell>
+                          <TableCell className="truncate">{t.description || "-"}</TableCell>
                           <TableCell>
                             <span className={`inline-flex items-center gap-1 text-sm font-medium ${t.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
                               {t.type === "Purchase" ? "↑" : "↓"} {t.type || "-"}
@@ -388,8 +528,13 @@ const Billing = () => {
                           <TableCell className={`font-semibold ${t.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
                             {t.type === "Purchase" ? "+" : "-"}{formatNumber(t.amount)} credits
                           </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1.5 h-8"
+                              onClick={() => handleReceiptClick("transaction", t)}
+                            >
                               <Receipt className="h-3.5 w-3.5" />
                               Receipt
                             </Button>
@@ -410,7 +555,7 @@ const Billing = () => {
                       <TableHead className="w-32">AMOUNT</TableHead>
                       <TableHead className="w-36">CREDITS</TableHead>
                       <TableHead className="w-32">STATUS</TableHead>
-                      <TableHead className="w-28 text-right">ACTIONS</TableHead>
+                      <TableHead className="w-32 text-right">ACTIONS</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -442,9 +587,14 @@ const Billing = () => {
                                 Pay
                               </Button>
                             ) : (
-                              <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-1.5 h-8"
+                                onClick={() => handleReceiptClick("payment", p)}
+                              >
                                 <Receipt className="h-3.5 w-3.5" />
-                                Invoice
+                                Receipt
                               </Button>
                             )}
                           </TableCell>

@@ -117,11 +117,14 @@ const Sidebar = () => {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200 ease-out perspective ${
                         active
                           ? "bg-accent text-primary"
-                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground hover:shadow-lg hover:-translate-y-1 hover:scale-105"
                       }`}
+                      style={{
+                        transformOrigin: 'center bottom',
+                      }}
                     >
                       <item.icon className="h-4 w-4" />
                       {item.label}
@@ -142,7 +145,7 @@ const Sidebar = () => {
           <div className="bg-gradient-to-t from-card via-card/80 to-transparent px-3 pb-2 pt-6">
             <button
               onClick={scrollToBottom}
-              className="pointer-events-auto flex w-full items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className="pointer-events-auto flex w-full items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
             >
               <ChevronDown className="h-4 w-4 animate-bounce" />
               Scroll for More
