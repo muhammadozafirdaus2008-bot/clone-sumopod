@@ -322,9 +322,8 @@ const Billing = () => {
         "https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
           body: JSON.stringify({
-            user_id: session.user.id,
             amount,
             currency: "IDR",
             payment_method: paymentMethod,
