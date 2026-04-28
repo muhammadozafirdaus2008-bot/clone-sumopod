@@ -22,6 +22,7 @@ import {
   GraduationCap, Users2, MessageSquare, Bot, Wallet,
   Monitor, Database, Globe, Mail, Users, HelpCircle,
 } from "lucide-react";
+import Learn from "@/pages/Learn";
 
 const queryClient = new QueryClient();
 
@@ -43,7 +44,7 @@ export default function App() {
               <Route element={<DashboardLayout />}>
 
                 {/* Learning */}
-                <Route path="/learn"     element={<PlaceholderPage title="Learn"     subtitle="Tutorials and guides" icon={<GraduationCap className="h-8 w-8" />} />} />
+                <Route path="/learn" element={<Learn />} />
                 <Route path="/community" element={<PlaceholderPage title="Community" subtitle="Connect with users"   icon={<Users2 className="h-8 w-8" />} />} />
 
                 {/* AI & Chat */}
