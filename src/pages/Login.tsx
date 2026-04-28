@@ -103,7 +103,7 @@ const Login = () => {
   }, []);
 
   // ✅ Conditional return SETELAH semua hooks
-  if (!loading && user) return <Navigate to="/services" replace />;
+  if (!loading && user) return <Navigate to="/learn" replace />;
 
   const t = TESTIMONIALS[testimonialIndex];
   const initials = t.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -120,7 +120,7 @@ const Login = () => {
     setOauthLoading(provider);
     await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin + "/services" },
+      options: { redirectTo: window.location.origin + "/learn" },
     });
     setOauthLoading(null);
   };

@@ -15,7 +15,7 @@ const Register = () => {
   const [oauthLoading, setOauthLoading] = useState<"google" | "facebook" | null>(null);
   const [done, setDone] = useState(false);
 
-  if (!loading && user) return <Navigate to="/services" replace />;
+  if (!loading && user) return <Navigate to="/learn" replace />;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
