@@ -69,7 +69,7 @@ export default function Hero() {
   const isDone = phase === 'typing' && currentLine === LINES.length - 1 && displayed[LINES.length - 1] === LINES[LINES.length - 1].text;
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 bg-white overflow-hidden">
+   <section className="relative min-h-screen flex flex-col items-center justify-start pt-32 text-center px-6 bg-white overflow-hidden">
       {/* Subtle grid */}
       <div
         className="absolute inset-0 opacity-[0.035]"
