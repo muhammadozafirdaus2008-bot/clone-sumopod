@@ -23,6 +23,7 @@ import {
   Monitor, Database, Globe, Mail, Users, HelpCircle,
 } from "lucide-react";
 import Learn from "@/pages/Learn";
+import Support from "@/pages/Support";
 
 const queryClient = new QueryClient();
 
@@ -74,7 +75,7 @@ export default function App() {
                 <Route path="/billing"   element={<Billing />} />
                 <Route path="/affiliate" element={<PlaceholderPage title="Affiliate" subtitle="Referral" icon={<Users className="h-8 w-8" />} />} />
                 <Route path="/settings"  element={<SettingsPage />} />
-                <Route path="/support"   element={<PlaceholderPage title="Support" subtitle="Help" icon={<HelpCircle className="h-8 w-8" />} />} />
+               <Route path="/support" element={<Support />} />
 
               </Route>
 
