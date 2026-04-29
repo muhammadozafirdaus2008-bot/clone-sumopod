@@ -234,6 +234,7 @@ const ReceiptModal = ({ open, onOpenChange, transaction, payment }: ReceiptModal
 
 // ── Main Component ───────────────────────────────────────────────────────────
 const Billing = () => {
+  
   const { credits, session } = useAuth();
   const [realBalance, setRealBalance] = useState(0);
   const { toast } = useToast();
@@ -245,7 +246,7 @@ const Billing = () => {
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<{ type: "transaction" | "payment"; data: Transaction | Payment } | null>(null);
-
+  
   // Fade-in on mount
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -288,15 +289,17 @@ const Billing = () => {
 
   const fetchBalance = async () => {
     const { data, error } = await supabase
-      .from("Balances")
-      .select("balance")
-      .eq("user_id", session.user.id)
-      .single();
+  .from("Balances")
+  .select("balance")
+  .eq("user_id", session.user.id)
+  .maybeSingle(); // ← ganti dari .single()
 
-    if (error) {
-      console.error("Error ambil balance:", error);
-      return;
-    }
+if (error) {
+  console.error("Error ambil balance:", error);
+  return;
+}
+
+setRealBalance(data?.balance ?? 0); 
 
     if (data) {
       setRealBalance(data.balance);
@@ -323,11 +326,13 @@ const Billing = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
-          body: JSON.stringify({
+         body: JSON.stringify({
             amount,
             currency: "IDR",
             payment_method: paymentMethod,
+            user_id: session.user.id,  
           }),
+
         }
       );
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
