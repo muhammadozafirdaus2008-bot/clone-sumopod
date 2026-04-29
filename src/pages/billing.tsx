@@ -284,29 +284,25 @@ const Billing = () => {
       });
   }, [session?.user, credits]);
 
-  useEffect(() => {
+useEffect(() => {
   if (!session?.user) return;
 
   const fetchBalance = async () => {
     const { data, error } = await supabase
-  .from("Balances")
-  .select("balance")
-  .eq("user_id", session.user.id)
-  .maybeSingle(); // ← ganti dari .single()
+      .from("Balances")
+      .select("balance")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
 
-if (error) {
-  console.error("Error ambil balance:", error);
-  return;
-}
-
-setRealBalance(data?.balance ?? 0); 
-
-    if (data) {
-      setRealBalance(data.balance);
+    if (error) {
+      console.error("Error ambil balance:", error);
+      return;
     }
+
+    setRealBalance(data?.balance ?? 0); // ← ini harus di DALAM fetchBalance
   };
 
-  fetchBalance();
+  fetchBalance(); // ← ini di luar fetchBalance tapi di dalam useEffect
 }, [session?.user]);
 
   const handleTopup = async () => {
