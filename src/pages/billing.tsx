@@ -236,7 +236,7 @@ const ReceiptModal = ({ open, onOpenChange, transaction, payment }: ReceiptModal
 const Billing = () => {
   
   const { credits, session } = useAuth();
-  const [realBalance, setRealBalance] = useState(0);
+  const [realbalance, setRealbalance] = useState(0);
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -287,9 +287,9 @@ const Billing = () => {
 useEffect(() => {
   if (!session?.user) return;
 
-  const fetchBalance = async () => {
+  const fetchbalance = async () => {
     const { data, error } = await supabase
-      .from("Balances")
+      .from("balances")
       .select("balance")
       .eq("user_id", session.user.id)
       .maybeSingle();
@@ -299,10 +299,10 @@ useEffect(() => {
       return;
     }
 
-    setRealBalance(data?.balance ?? 0); // ← ini harus di DALAM fetchBalance
+    setRealbalance(data?.balance ?? 0); // ← ini harus di DALAM fetchBalance
   };
 
-  fetchBalance(); // ← ini di luar fetchBalance tapi di dalam useEffect
+  fetchbalance(); // ← ini di luar fetchBalance tapi di dalam useEffect
 }, [session?.user]);
 
   const handleTopup = async () => {
@@ -484,7 +484,7 @@ useEffect(() => {
               <div>
                 <p className="text-sm text-muted-foreground">Current Credits</p>
                 <p className="text-3xl font-bold text-foreground">
-                  <AnimatedNumber value={realBalance} />
+                  <AnimatedNumber value={realbalance} />
                 </p>
               </div>
             </div>
