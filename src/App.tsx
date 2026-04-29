@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import Learn from "@/pages/Learn";
 import Support from "@/pages/Support";
+import TemplatesPage from "./pages/TemplatePage";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +41,7 @@ export default function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-
+              <Route path="/templates" element={<TemplatesPage />} />  
               {/* Dashboard */}
               <Route element={<DashboardLayout />}>
 
