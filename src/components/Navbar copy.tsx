@@ -6,13 +6,13 @@ import { useState, useEffect, useRef } from 'react';
 const NAV_ITEMS = [
   {
     label: 'Home',
-    href: '#',
+    href: '/',
     active: true,
     popup: 'Kembali ke halaman utama',
   },
   {
     label: 'Templates',
-    href: '#templates',
+    href: '/templates',
     active: false,
     popup: 'Lihat semua template app siap pakai',
   },
@@ -71,6 +71,7 @@ export default function Navbar() {
               >
                 <a
                   href={item.href}
+                  onClick={item.href.startsWith('/') && !item.href.startsWith('/#') ? (e) => { e.preventDefault(); navigate(item.href); } : undefined}
                   className={`font-medium text-base transition-colors ${
                     item.active
                       ? 'text-blue-600'
