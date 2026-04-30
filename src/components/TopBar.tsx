@@ -16,7 +16,7 @@ const TopBar = () => {
   const navigate = useNavigate();
   const { isDark, toggle } = useTheme();
   const initials = user?.email?.slice(0, 1).toUpperCase() ?? "U";
-  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const displayName = user?.name || user?.email?.split("@")[0] || "User";
 
   return (
     <header className="flex h-16 items-center justify-end border-b border-border bg-card px-6 gap-3">

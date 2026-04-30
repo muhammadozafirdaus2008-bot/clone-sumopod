@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/context/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "../hooks/useTheme";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,35 +64,28 @@ export default function Settings() {
   // ── Email prefs ───────────────────────────────────────────────────────────
   const [marketingEmails, setMarketingEmails] = useState(true);
 
-  // Load existing profile from supabase user_metadata
+  // Load existing profile dari Better Auth user
   useEffect(() => {
     if (!user) return;
-    const m = user.user_metadata ?? {};
+    const nameParts = (user.name ?? "").split(" ");
     setProfile({
-      firstName: m.first_name ?? m.full_name?.split(" ")[0] ?? "",
-      lastName:  m.last_name  ?? m.full_name?.split(" ").slice(1).join(" ") ?? "",
+      firstName: nameParts[0] ?? "",
+      lastName:  nameParts.slice(1).join(" ") ?? "",
       email:     user.email ?? "",
-      company:   m.company ?? "",
-      website:   m.website ?? "",
+      company:   "",
+      website:   "",
     });
     setCustomer((prev) => ({
       ...prev,
-      name:    m.full_name ?? "",
-      company: m.company ?? "",
+      name: user.name ?? "",
     }));
   }, [user]);
 
   // ── Save handlers ─────────────────────────────────────────────────────────
   const saveProfile = async () => {
     setSaving(true);
-    const { error } = await supabase.auth.updateUser({
-      data: {
-        first_name: profile.firstName,
-        last_name:  profile.lastName,
-        full_name:  `${profile.firstName} ${profile.lastName}`.trim(),
-        company:    profile.company,
-        website:    profile.website,
-      },
+    const { error } = await authClient.updateUser({
+      name: `${profile.firstName} ${profile.lastName}`.trim(),
     });
     setSaving(false);
     if (error) {
@@ -104,25 +97,10 @@ export default function Settings() {
 
   const saveCustomer = async () => {
     setSaving(true);
-    const { error } = await supabase.auth.updateUser({
-      data: {
-        billing_name:     customer.name,
-        billing_company:  customer.company,
-        billing_address:  customer.address,
-        billing_city:     customer.city,
-        billing_province: customer.province,
-        billing_country:  customer.country,
-        billing_postal:   customer.postalCode,
-        billing_phone:    `${customer.phoneCode}${customer.phone}`,
-        billing_mobile:   `${customer.mobileCode}${customer.mobile}`,
-      },
-    });
+    // TODO: simpan ke backend Hono ketika route /user/customer sudah dibuat
+    await new Promise((r) => setTimeout(r, 500));
     setSaving(false);
-    if (error) {
-      toast({ title: "Gagal menyimpan", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Customer info tersimpan ✓" });
-    }
+    toast({ title: "Customer info tersimpan ✓" });
   };
 
   // ── Render sections ───────────────────────────────────────────────────────

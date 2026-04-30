@@ -85,6 +85,16 @@ const Landing = () => {
     setTimeout(() => SectionVisibilityContext.set(0, true), 100);
   }, []);
 
+  // Listen event dari Navbar untuk navigasi section
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const index = (e as CustomEvent<{ index: number }>).detail.index;
+      goTo(index);
+    };
+    window.addEventListener('landing:goTo', handler);
+    return () => window.removeEventListener('landing:goTo', handler);
+  }, [goTo]);
+
   return (
     <div className="fixed inset-0 overflow-hidden bg-white">
       <Navbar />

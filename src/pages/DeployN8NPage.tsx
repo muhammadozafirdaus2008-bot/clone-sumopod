@@ -17,7 +17,7 @@ import {
 export default function DeployServicePage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { session, credits } = useAuth();
+  const { session, user, credits } = useAuth();
   const { toast } = useToast();
 
   const service = location.state?.service;
@@ -56,7 +56,7 @@ export default function DeployServicePage() {
       toast({ title: "Kredit tidak cukup", description: "Top up dulu sebelum deploy", variant: "destructive" });
       return;
     }
-    if (!session?.access_token) {
+    if (!session?.token) {
       toast({ title: "Error", description: "Session expired, login ulang", variant: "destructive" });
       return;
     }
@@ -74,7 +74,7 @@ export default function DeployServicePage() {
         serviceName.trim(),
         selectedTemplate.id,
         selectedTemplate.cost,
-        session!.access_token
+        session!.token
       );
 
       toast({ title: "Deploy Berhasil! 🚀", description: "Service sedang di-deploy. Tunggu 10–30 detik..." });

@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const features = [
   'Unlimited container deployments',
@@ -11,6 +12,7 @@ const features = [
 ];
 
 export default function Pricing() {
+  const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const [cardVisible, setCardVisible] = useState(false);
@@ -94,12 +96,12 @@ export default function Pricing() {
               </ul>
 
               <div className="flex flex-col gap-1.5">
-                <a href="#" className="w-full py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs text-center hover:bg-blue-700 transition-all hover:shadow-md hover:shadow-blue-200 active:scale-95">
+                <button onClick={() => navigate('/register')} className="w-full py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs text-center hover:bg-blue-700 transition-all hover:shadow-md hover:shadow-blue-200 active:scale-95">
                   Get Started
-                </a>
-                <a href="#templates" className="w-full py-2 rounded-xl border border-gray-200 bg-white text-gray-600 font-semibold text-xs text-center hover:bg-gray-50 transition-all active:scale-95">
+                </button>
+                <button onClick={() => navigate('/templates')} className="w-full py-2 rounded-xl border border-gray-200 bg-white text-gray-600 font-semibold text-xs text-center hover:bg-gray-50 transition-all active:scale-95">
                   See App Templates
-                </a>
+                </button>
               </div>
             </div>
           </div>

@@ -19,7 +19,7 @@ const Profile = () => {
             <AvatarFallback className="bg-primary text-primary-foreground text-2xl">{initials}</AvatarFallback>
           </Avatar>
           <CardTitle className="mt-4">{user?.email}</CardTitle>
-          <CardDescription>Member since {new Date(user?.created_at ?? "").toLocaleDateString()}</CardDescription>
+          <CardDescription>Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3 rounded-lg bg-secondary p-3">
@@ -40,7 +40,7 @@ const Profile = () => {
             <Calendar className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Joined</p>
-              <p className="text-sm font-medium text-foreground">{new Date(user?.created_at ?? "").toLocaleDateString()}</p>
+              <p className="text-sm font-medium text-foreground">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</p>
             </div>
           </div>
           <Button variant="outline" className="w-full" onClick={signOut}>

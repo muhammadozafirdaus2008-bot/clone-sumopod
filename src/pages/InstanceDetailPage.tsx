@@ -24,15 +24,15 @@ interface Instance {
 export default function InstanceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { user } = useAuth();
   const [instance, setInstance] = useState<Instance | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!session?.user?.id || !id) return;
+    if (!user?.id || !id) return;
     fetchInstance();
-  }, [id, session?.user?.id]);
+  }, [id, user?.id]);
 
   const fetchInstance = async () => {
     try {
@@ -40,7 +40,7 @@ export default function InstanceDetailPage() {
         .from("instances")
         .select("*")
         .eq("id", id)
-        .eq("user_id", session?.user?.id)
+        .eq("user_id", user?.id)
         .single();
 
       if (error) throw error;

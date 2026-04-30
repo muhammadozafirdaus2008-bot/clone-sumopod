@@ -235,7 +235,7 @@ const ReceiptModal = ({ open, onOpenChange, transaction, payment }: ReceiptModal
 // ── Main Component ───────────────────────────────────────────────────────────
 const Billing = () => {
   
-  const { credits, session } = useAuth();
+  const { credits, session, user } = useAuth();
   const [realbalance, setRealbalance] = useState(0);
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -259,39 +259,39 @@ const Billing = () => {
   useSmoothScroll(scrollRef);
 
   useEffect(() => {
-    if (!session?.user) return;
+    if (!user) return;
     supabase
       .from("Transactions")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) console.error("Transactions error:", error.message);
         if (data) setTransactions(data as Transaction[]);
       });
-  }, [session?.user, credits]);
+  }, [user, credits]);
 
   useEffect(() => {
-    if (!session?.user) return;
+    if (!user) return;
     supabase
       .from("Payments")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) console.error("Payments error:", error.message);
         if (data) setPayments(data as Payment[]);
       });
-  }, [session?.user, credits]);
+  }, [user, credits]);
 
 useEffect(() => {
-  if (!session?.user) return;
+  if (!user) return;
 
   const fetchbalance = async () => {
     const { data, error } = await supabase
       .from("balances")
       .select("balance")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     if (error) {
@@ -299,11 +299,11 @@ useEffect(() => {
       return;
     }
 
-    setRealbalance(data?.balance ?? 0); // ← ini harus di DALAM fetchBalance
+    setRealbalance(data?.balance ?? 0);
   };
 
-  fetchbalance(); // ← ini di luar fetchBalance tapi di dalam useEffect
-}, [session?.user]);
+  fetchbalance();
+}, [user]);
 
   const handleTopup = async () => {
     const amount = parseInt(topupAmount);
@@ -311,7 +311,7 @@ useEffect(() => {
       toast({ title: "Masukkan jumlah yang valid", variant: "destructive" });
       return;
     }
-    if (!session?.user?.id) {
+    if (!user?.id) {
       toast({ title: "Login dulu", variant: "destructive" });
       return;
     }
@@ -321,12 +321,12 @@ useEffect(() => {
         "https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.token}` },
          body: JSON.stringify({
             amount,
             currency: "IDR",
             payment_method: paymentMethod,
-            user_id: session.user.id,  
+            user_id: user.id,  
           }),
 
         }

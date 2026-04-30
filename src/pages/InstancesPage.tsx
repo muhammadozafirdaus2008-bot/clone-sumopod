@@ -16,7 +16,7 @@ const TEMPLATES = [
 ];
 
 export default function DeployN8NPage() {
-  const { session, credits } = useAuth();
+  const { session, user, credits } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -48,7 +48,7 @@ export default function DeployN8NPage() {
       return;
     }
 
-    if (!session?.access_token) {
+    if (!session?.token) {
       toast({
         title: "Error",
         description: "Please login first",
@@ -82,7 +82,7 @@ export default function DeployN8NPage() {
   serviceName.trim(),
   selectedTemplate.id,
   selectedTemplate.cost,
-  session.access_token
+  session!.token
 );
 
       toast({

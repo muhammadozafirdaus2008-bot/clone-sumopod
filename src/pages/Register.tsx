@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/components/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Box, Eye, EyeOff } from "lucide-react";
@@ -8,6 +8,7 @@ import { Box, Eye, EyeOff } from "lucide-react";
 const Register = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,10 +21,10 @@ const Register = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
+    const { error } = await authClient.signUp.email({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin + "/services" },
+      name: email.split("@")[0], // nama default dari email
     });
     setSubmitting(false);
     if (error) {
@@ -35,9 +36,9 @@ const Register = () => {
 
   const handleOAuth = async (provider: "google" | "facebook") => {
     setOauthLoading(provider);
-    await supabase.auth.signInWithOAuth({
+    await authClient.signIn.social({
       provider,
-      options: { redirectTo: window.location.origin + "/services" },
+      callbackURL: window.location.origin + "/learn",
     });
     setOauthLoading(null);
   };
@@ -51,7 +52,7 @@ const Register = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Check your email</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Account created!</h2>
           <p className="text-sm text-gray-500 mb-6">
             We sent a confirmation link to <span className="font-medium text-gray-700">{email}</span>. Click it to activate your account.
           </p>
@@ -81,7 +82,7 @@ const Register = () => {
           </div>
           <div className="space-y-3">
             {[
-              "Deploy n8n in under 30 seconds",
+              "Deploy apps in under 30 seconds",
               "No credit card required to start",
               "Automatic updates & security patches",
               "Custom domain support",
@@ -180,11 +181,11 @@ const Register = () => {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
                 <button

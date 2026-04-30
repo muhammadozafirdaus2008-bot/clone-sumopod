@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/components/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Box, Eye, EyeOff } from "lucide-react";
@@ -81,6 +81,7 @@ const TESTIMONIALS = [
 const Login = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -89,8 +90,6 @@ const Login = () => {
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [fade, setFade] = useState(true);
 
-  // ✅ useEffect HARUS di sini, SEBELUM conditional return
-  // Rotate testimonial setiap 10 detik dengan fade transition
   useEffect(() => {
     const interval = setInterval(() => {
       setFade(false);
@@ -102,7 +101,6 @@ const Login = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ Conditional return SETELAH semua hooks
   if (!loading && user) return <Navigate to="/learn" replace />;
 
   const t = TESTIMONIALS[testimonialIndex];
@@ -111,16 +109,20 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await authClient.signIn.email({ email, password });
     setSubmitting(false);
-    if (error) toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    if (error) {
+      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/learn");
+    }
   };
 
   const handleOAuth = async (provider: "google" | "facebook") => {
     setOauthLoading(provider);
-    await supabase.auth.signInWithOAuth({
+    await authClient.signIn.social({
       provider,
-      options: { redirectTo: window.location.origin + "/learn" },
+      callbackURL: window.location.origin + "/learn",
     });
     setOauthLoading(null);
   };

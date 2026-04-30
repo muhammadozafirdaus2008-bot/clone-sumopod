@@ -1,9 +1,21 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { authClient } from "@/lib/auth-client";
 import { supabase } from "@/lib/supabase";
-import type { User, Session } from "@supabase/supabase-js";
 
-;
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+  createdAt?: Date;
+}
 
+interface Session {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  token: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -34,7 +46,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error fetching credits:", error.message);
       return;
     }
-
     if (data) setCredits(data.balance);
   };
 
@@ -42,25 +53,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user) await fetchCredits(user.id);
   };
 
+  // Cek session saat pertama load
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const init = async () => {
+      const { data } = await authClient.getSession();
+      if (data?.session && data?.user) {
+        setSession(data.session as Session);
+        setUser(data.user as User);
+        await fetchCredits(data.user.id);
+      }
       setLoading(false);
-      if (session?.user) fetchCredits(session.user.id);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) fetchCredits(session.user.id);
-      else setCredits(0);
-    });
-
-    return () => subscription.unsubscribe();
+    };
+    init();
   }, []);
 
+  // Realtime balance dari Supabase (tetap pakai Supabase untuk ini)
   useEffect(() => {
     if (!user) return;
 
@@ -86,15 +93,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await authClient.signOut();
     setUser(null);
     setSession(null);
     setCredits(0);
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, session, accessToken: session?.access_token, loading, credits, refreshCredits, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        accessToken: session?.token ?? null,
+        loading,
+        credits,
+        refreshCredits,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

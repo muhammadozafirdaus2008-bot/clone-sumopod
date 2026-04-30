@@ -1,45 +1,77 @@
 import { Box, LogIn } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
-// Deskripsi popup untuk tiap nav item
+// Event-based section navigation untuk Landing
+export function navigateToSection(index: number) {
+  window.dispatchEvent(new CustomEvent('landing:goTo', { detail: { index } }));
+}
+
 const NAV_ITEMS = [
   {
     label: 'Home',
+    type: 'route' as const,
     href: '/',
-    active: true,
+    section: 0,
     popup: 'Kembali ke halaman utama',
   },
   {
     label: 'Templates',
+    type: 'route' as const,
     href: '/templates',
-    active: false,
+    section: null,
     popup: 'Lihat semua template app siap pakai',
   },
   {
     label: 'Pricing',
-    href: '#pricing',
-    active: false,
+    type: 'section' as const,
+    href: '/',
+    section: 1,
     popup: 'Cek paket harga yang sesuai kebutuhanmu',
   },
   {
     label: 'Features',
-    href: '#features',
-    active: false,
+    type: 'section' as const,
+    href: '/',
+    section: 2,
     popup: 'Fitur-fitur unggulan SumoPod',
   },
 ];
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const isLanding = location.pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleNavClick = (item: typeof NAV_ITEMS[number]) => {
+    if (item.type === 'route') {
+      navigate(item.href);
+      if (item.section === 0 && isLanding) navigateToSection(0);
+    } else {
+      // Pricing / Features → section Landing
+      if (isLanding) {
+        navigateToSection(item.section!);
+      } else {
+        navigate('/');
+        setTimeout(() => navigateToSection(item.section!), 600);
+      }
+    }
+  };
+
+  const getActive = (item: typeof NAV_ITEMS[number]) => {
+    if (item.href === '/templates' && location.pathname === '/templates') return true;
+    if (item.label === 'Home' && location.pathname === '/') return true;
+    return false;
+  };
 
   return (
     <nav
@@ -48,18 +80,15 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-10 h-16 flex items-center justify-between">
-        {/* Logo + Nav Links */}
         <div className="flex items-center gap-8">
-          <a
-            href="/"
-            className="flex items-center gap-2 font-bold text-xl text-gray-900 hover:opacity-80 transition-opacity"
-          >
+          {/* Logo — non-clickable, hanya display */}
+          <div className="flex items-center gap-2 font-bold text-xl text-gray-900 select-none cursor-default">
             <Box className="w-7 h-7 text-blue-500" strokeWidth={1.5} />
             <span>
               <span className="text-black">Sumo</span>
               <span className="text-blue-500">Pod</span>
             </span>
-          </a>
+          </div>
 
           <div className="hidden md:flex items-center gap-8">
             {NAV_ITEMS.map((item, i) => (
@@ -69,17 +98,16 @@ export default function Navbar() {
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
-                <a
-                  href={item.href}
-                  onClick={item.href.startsWith('/') && !item.href.startsWith('/#') ? (e) => { e.preventDefault(); navigate(item.href); } : undefined}
+                <button
+                  onClick={() => handleNavClick(item)}
                   className={`font-medium text-base transition-colors ${
-                    item.active
+                    getActive(item)
                       ? 'text-blue-600'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   {item.label}
-                </a>
+                </button>
 
                 {/* Popup tooltip */}
                 <div
@@ -89,9 +117,7 @@ export default function Navbar() {
                       : 'opacity-0 -translate-y-1 pointer-events-none'
                   }`}
                 >
-                  {/* Panah segitiga */}
                   <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-900 rotate-45 rounded-sm" />
-                  {/* Konten popup */}
                   <div className="relative bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg whitespace-nowrap shadow-xl">
                     {item.popup}
                   </div>

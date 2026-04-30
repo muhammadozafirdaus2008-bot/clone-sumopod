@@ -30,7 +30,7 @@ const tips = [
 
 const Support = () => {
   const { user } = useAuth();
-  const [name, setName]         = useState(user?.user_metadata?.full_name ?? "");
+  const [name, setName]         = useState(user?.name ?? "");
   const [category, setCategory] = useState<Category>("pertanyaan");
   const [message, setMessage]   = useState("");
   const [sent, setSent]         = useState(false);
