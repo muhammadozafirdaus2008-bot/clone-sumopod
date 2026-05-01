@@ -122,12 +122,11 @@ const Login = () => {
        });
        return;
     } 
-    const { data } = await authClient.getSession();
+
     setSubmitting(false);
 
-    if(data?.user) {
       navigate("/learn")
-    }
+    
   };
 
   const handleOAuth = async (provider: "google" | "facebook") => {
