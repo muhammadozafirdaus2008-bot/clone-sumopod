@@ -109,15 +109,24 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+
     const { error } = await authClient.signIn.email({ email, password });
-    setSubmitting(false);
+
+    
     if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
-    } else {
-      const { data } = await authClient.getSession();
-      if( data?.user ) {
-        window.location.href = "/learn";
-      }
+      setSubmitting(false);
+      toast({ 
+        title: "Login failed", 
+        description: error.message, 
+        variant: "destructive"
+       });
+       return;
+    } 
+    const { data } = await authClient.getSession();
+    setSubmitting(false);
+
+    if(data?.user) {
+      navigate("/learn")
     }
   };
 
