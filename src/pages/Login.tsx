@@ -107,27 +107,21 @@ const Login = () => {
   const initials = t.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
+  e.preventDefault();
+  setSubmitting(true);
+  const { error, data } = await authClient.signIn.email({ email, password });
+  console.log("signIn result:", { error, data });
 
-    const { error } = await authClient.signIn.email({ email, password });
+  const session = await authClient.getSession();
+  console.log("session after login:", session);
 
-    
-    if (error) {
-      setSubmitting(false);
-      toast({ 
-        title: "Login failed", 
-        description: error.message, 
-        variant: "destructive"
-       });
-       return;
-    } 
-
-    setSubmitting(false);
-
-      navigate("/learn")
-    
-  };
+  setSubmitting(false);
+  if (error) {
+    toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    return;
+  }
+  window.location.href = "/learn";
+};
 
   const handleOAuth = async (provider: "google" | "facebook") => {
     setOauthLoading(provider);
