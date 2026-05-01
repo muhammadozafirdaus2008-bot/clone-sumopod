@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchCredits = async (userId: string) => {
     const { data, error } = await supabase
-      .from("Balances")
+      .from("balances")
       .select("balance")
       .eq("user_id", userId)
       .maybeSingle();
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         {
           event: "UPDATE",
           schema: "public",
-          table: "Balances",
+          table: "balances",
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {

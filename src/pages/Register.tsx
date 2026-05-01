@@ -30,7 +30,7 @@ const Register = () => {
     if (error) {
       toast({ title: "Registration failed", description: error.message, variant: "destructive" });
     } else {
-      setDone(true);
+      navigate("/learn")
     }
   };
 
