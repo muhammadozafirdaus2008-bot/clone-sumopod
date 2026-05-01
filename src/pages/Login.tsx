@@ -116,7 +116,7 @@ const Login = () => {
     } else {
       const { data } = await authClient.getSession();
       if( data?.user ) {
-        navigate("/learn");
+        window.location.href = "/learn";
       }
     }
   };
