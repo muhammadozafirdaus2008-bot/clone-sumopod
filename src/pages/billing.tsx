@@ -261,7 +261,7 @@ const Billing = () => {
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("Transactions")
+      .from("transactions")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
@@ -274,7 +274,7 @@ const Billing = () => {
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("Payments")
+      .from("payments")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
@@ -294,16 +294,13 @@ useEffect(() => {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (error) {
-      console.error("Error ambil balance:", error);
-      return;
-    }
-
+    if (error) { console.error("Error ambil balance:", error); return; }
     setRealbalance(data?.balance ?? 0);
-  };
+    };
+
 
   fetchbalance();
-}, [user]);
+}, [user, payments, transactions]);
 
   const handleTopup = async () => {
     const amount = parseInt(topupAmount);
