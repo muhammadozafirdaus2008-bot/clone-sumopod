@@ -318,16 +318,12 @@ useEffect(() => {
     setProcessing(true);
     try {
       const res = await fetch(
-        "https://n8n-azfzwmyoqkaw.jkt1.sumopod.my.id/webhook/topup-balance",
+        "https://api.ghozali.biz.id/api/payment/create",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.token}` },
-         body: JSON.stringify({
-            amount,
-            currency: "IDR",
-            payment_method: paymentMethod,
-            user_id: user.id,  
-          }),
+          headers: { "Content-Type": "application/json"  },
+          credentials: 'include',
+         body: JSON.stringify({ amount }),
 
         }
       );
