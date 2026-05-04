@@ -550,12 +550,12 @@ fetchBalance();
                           <TableCell className="text-muted-foreground">{formatDate(t.created_at)}</TableCell>
                           <TableCell className="truncate">{t.description || "-"}</TableCell>
                           <TableCell>
-                            <span className={`inline-flex items-center gap-1 text-sm font-medium ${t.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
-                              {t.type === "Purchase" ? "↑" : "↓"} {t.type || "-"}
+                            <span className={`inline-flex items-center gap-1 text-sm font-medium ${t.type === "topup" ? "text-green-600" : "text-red-500"}`}>
+                              {t.type === "topup" ? "↑" : "↓"} {t.type || "-"}
                             </span>
                           </TableCell>
-                          <TableCell className={`font-semibold ${t.type === "Purchase" ? "text-green-600" : "text-red-500"}`}>
-                            {t.type === "Purchase" ? "+" : "-"}{formatNumber(t.amount)} credits
+                         <TableCell className={`font-semibold ${t.type === "topup" ? "text-green-600" : "text-red-500"}`}>
+  {t.type === "topup" ? "+" : "-"}{formatNumber(t.amount)} credits
                           </TableCell>
                           <TableCell>
                             <Button
