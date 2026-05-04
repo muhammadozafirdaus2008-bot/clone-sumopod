@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/context/AuthContext";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -259,48 +258,61 @@ const Billing = () => {
   useSmoothScroll(scrollRef);
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error("Transactions error:", error.message);
-        if (data) setTransactions(data as Transaction[]);
-      });
-  }, [user, credits]);
+  if (!user) return;
+
+  const fetchTransactions = async () => {
+    const res = await fetch(
+      "https://clone-sumopod-backend-production.up.railway.app/api/transactions",
+      { credentials: "include" }
+    );
+
+    const data = await res.json();
+    console.log("🔥 transactions:", data);
+
+    setTransactions(data || []);
+  };
+
+  fetchTransactions();
+}, [user]);
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("payments")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error("Payments error:", error.message);
-        if (data) setPayments(data as Payment[]);
-      });
-  }, [user, credits]);
+  if (!user) return;
+
+  const fetchPayments = async () => {
+    const res = await fetch(
+      "https://clone-sumopod-backend-production.up.railway.app/api/payments",
+      { credentials: "include" }
+    );
+
+    const data = await res.json();
+    console.log("🔥 payments:", data);
+
+    setPayments(data || []);
+  };
+
+  fetchPayments();
+}, [user]);
 
 useEffect(() => {
   if (!user) return;
 
-  const fetchbalance = async () => {
-    const { data, error } = await supabase
-      .from("balances")
-      .select("balance")
-      .eq("user_id", user.id)
-      .maybeSingle();
+  const fetchBalance = async () => {
+    const res = await fetch(
+      "https://clone-sumopod-backend-production.up.railway.app/api/balance",
+      { credentials: "include" }
+    );
 
-    if (error) { console.error("Error ambil balance:", error); return; }
-    setRealbalance(data?.balance ?? 0);
-    };
+    const data = await res.json();
+    console.log("🔥 balance:", data);
+
+    setRealbalance(Number(data.balance || 0));
+  };
+  
+ 
 
 
-  fetchbalance();
-}, [user, payments, transactions]);
+fetchBalance();
+}, [user]);
 
   const handleTopup = async () => {
     const amount = parseInt(topupAmount);
