@@ -318,7 +318,7 @@ useEffect(() => {
     setProcessing(true);
     try {
       const res = await fetch(
-        "https://api.ghozali.biz.id/api/payment/create",
+        "https://clone-sumopod-backend-production.up.railway.app/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json"  },
