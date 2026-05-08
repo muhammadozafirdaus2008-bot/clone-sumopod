@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -39,7 +40,7 @@ const Services = () => {
     if (!user) return;
     setLoading(true);
    const res = await fetch(
-  "http://localhost:3000",
+  "https://clone-sumopod-backend-production.up.railway.app/api/instances",
   { credentials: "include" }
 )
 const data = await res.json()
