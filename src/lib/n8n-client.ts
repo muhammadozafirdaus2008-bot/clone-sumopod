@@ -4,14 +4,14 @@ export async function deployN8nService(
   cost: number,
   token: string
 ) {
-  const res = await fetch("https://n8n.ghozali.biz.id/webhook/Deploy-Service", {
+  const res = await fetch("https://clone-sumopod-backend-production.up.railway.app/instances", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
+    credentials: "include",
     body: JSON.stringify({
-      name: serviceName,   // sesuai body request
+      name: serviceName,
       template,
       cost,
     }),
