@@ -35,23 +35,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState(0);
 
-  const fetchCredits = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("balances")
-      .select("balance")
-      .eq("user_id", userId)
-      .maybeSingle();
 
-    if (error) {
-      console.error("Error fetching credits:", error.message);
-      return;
-    }
-    if (data) setCredits(data.balance);
-  };
+const fetchCredits = async () => {
+  const res = await fetch(
+    "https://clone-sumopod-backend-production.up.railway.app/api/balance",
+    { credentials: "include" }
+  )
+  const data = await res.json()
+  if (data?.balance) setCredits(Number(data.balance))
+};
 
-  const refreshCredits = async () => {
-    if (user) await fetchCredits(user.id);
-  };
+const refreshCredits = async () => {
+  await fetchCredits();
+};
 
   // Cek session saat pertama load
   useEffect(() => {
@@ -60,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (data?.session && data?.user) {
         setSession(data.session as Session);
         setUser(data.user as User);
-        await fetchCredits(data.user.id);
+        await fetchCredits();
       }
       setLoading(false);
     };
