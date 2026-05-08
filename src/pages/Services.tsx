@@ -39,14 +39,14 @@ const Services = () => {
   const fetchServices = async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("instances")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+   const res = await fetch(
+  "https://clone-sumopod-backend-production.up.railway.app/api/instances",
+  { credentials: "include" }
+)
+const data = await res.json()
 
-    if (!error && data) {
-      setServices(data as Service[]);
+if (data) {
+  setServices(data as Service[]);
       // default auto renewal true untuk semua
       const renewalMap: Record<string, boolean> = {};
       data.forEach((s: Service) => { renewalMap[s.id] = true; });
