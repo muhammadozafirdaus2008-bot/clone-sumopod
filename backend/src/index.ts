@@ -5,9 +5,10 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { auth } from './lib/auth';
 import { db } from './db/index';
-import { payments, balances, transactions } from './db/schema';
+import { payments, balances, transactions, instances } from './db/schema';
 import { eq } from 'drizzle-orm';
 import { number } from 'zod';
+
 
 const app = new Hono();
 
@@ -169,7 +170,7 @@ app.post('/instances', async (c) => {
   }
   
   const userId = session.user.id
-  
+
   const body = await c.req.json()
 
   const res = await fetch ('https://asysetup-n8n.rshg0u.easypanel.host/webhook/deploy', {
@@ -181,6 +182,12 @@ headers: {
   })
 
   const result = await res.json()
+await db.insert(instances).values({
+  userId: userId,
+  serviceName: body.name || 'default',
+  status: 'deploying',
+  url: result.url ?? null,
+})
 
   return c.json({
     message: 'instance deployed successfully',
