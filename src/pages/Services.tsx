@@ -47,7 +47,6 @@ const data = await res.json()
 
 if (data) {
   setServices(data as Service[]);
-      // default auto renewal true untuk semua
       const renewalMap: Record<string, boolean> = {};
       data.forEach((s: Service) => { renewalMap[s.id] = true; });
       setAutoRenewal(renewalMap);
